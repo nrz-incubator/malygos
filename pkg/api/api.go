@@ -14,8 +14,12 @@ type ApiImpl struct {
 	rbac                     rbac.RBAC
 }
 
-func NewApiImpl(logger logr.Logger) *ApiImpl {
+func NewApiImpl(logger logr.Logger,
+	clusterManager clustermanager.ClusterManager,
+	managementClusterManager managementclustermanager.ManagementClusterManager) *ApiImpl {
 	return &ApiImpl{
-		logger: logger,
+		logger:                   logger,
+		clusterManager:           clusterManager,
+		managementClusterManager: managementClusterManager,
 	}
 }

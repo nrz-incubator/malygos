@@ -10,6 +10,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/nrz-k8s-incubator/malygos/pkg/api"
+	"github.com/nrz-k8s-incubator/malygos/pkg/malygos/clustermanager"
+	"github.com/nrz-k8s-incubator/malygos/pkg/malygos/managementclustermanager"
 	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
 )
@@ -47,7 +49,10 @@ func (m *Malygos) Run() error {
 	p := prometheus.NewPrometheus("echo", nil)
 	p.Use(e)
 
-	myAPI := api.NewApiImpl(logger)
+	inKubeClusterManager := managementclustermanager.NewInKubeClusterManager()
+	kamajiClusterManager := clustermanager.NewKamajiClusterManager()
+
+	myAPI := api.NewApiImpl(logger, kamajiClusterManager, inKubeClusterManager)
 	api.RegisterHandlers(e, myAPI)
 
 	// TODO: CORS
