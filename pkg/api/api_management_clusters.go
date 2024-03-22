@@ -8,6 +8,10 @@ import (
 )
 
 func (api *ApiImpl) CreateManagementCluster(c echo.Context) error {
+	if !api.rbac.IsAllowed("TODO username", "create", "managementcluster") {
+		return c.JSON(http.StatusForbidden, nil)
+	}
+
 	_, err := api.managementClusterManager.Create(nil)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -17,6 +21,10 @@ func (api *ApiImpl) CreateManagementCluster(c echo.Context) error {
 }
 
 func (api *ApiImpl) ListManagementClusters(c echo.Context) error {
+	if !api.rbac.IsAllowed("TODO username", "list", "managementcluster") {
+		return c.JSON(http.StatusForbidden, nil)
+	}
+
 	_, err := api.managementClusterManager.List()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -25,6 +33,10 @@ func (api *ApiImpl) ListManagementClusters(c echo.Context) error {
 }
 
 func (api *ApiImpl) GetManagementCluster(c echo.Context, id string) error {
+	if !api.rbac.IsAllowed("TODO username", "get", "managementcluster") {
+		return c.JSON(http.StatusForbidden, nil)
+	}
+
 	_, err := api.managementClusterManager.Get(id)
 	if err != nil {
 		if errors.IsNotFound(err) {
