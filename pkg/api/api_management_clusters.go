@@ -49,6 +49,10 @@ func (api *ApiImpl) GetManagementCluster(c echo.Context, id string) error {
 }
 
 func (api *ApiImpl) DeleteManagementCluster(c echo.Context, id string) error {
+	if !api.rbac.IsAllowed("TODO username", "delete", "managementcluster") {
+		return c.JSON(http.StatusForbidden, nil)
+	}
+
 	if err := api.managementClusterManager.Delete(id); err != nil {
 		if errors.IsNotFound(err) {
 			return c.JSON(http.StatusNotFound, nil)
