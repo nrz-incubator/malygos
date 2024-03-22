@@ -15,8 +15,8 @@ paths:
       summary: Create a new cluster
       operationId: createCluster
       security:
-        - bearerAuth: [cluster_admin]
-        - basicAuth: [cluster_admin]
+        - bearerAuth: []
+        - basicAuth: []
       requestBody:
         required: true
         content:
@@ -24,33 +24,33 @@ paths:
             schema:
               $ref: "#/components/schemas/Cluster"
       responses:
-        '201':
+        "201":
           description: Cluster created, returns hydrated cluster
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Cluster"
-        '400':
+        "400":
           description: Invalid input
-        '409':
+        "409":
           description: Cluster already exists
-      get:
-        summary: List all clusters
-        operationId: listClusters
-        security:
-          - bearerAuth: []
-          - basic: []
-        responses:
-          '200':
-            description: List of clusters
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/Cluster"
-          '404':
-            description: No cluster found
+    get:
+      summary: List all clusters
+      operationId: listClusters
+      security:
+        - bearerAuth: []
+        - basic: []
+      responses:
+        "200":
+          description: List of clusters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Cluster"
+        "404":
+          description: No cluster found
   /v1/clusters/{clusterId}:
     get:
       summary: Get a cluster
@@ -66,20 +66,20 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Cluster found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Cluster"
-        '404':
+        "404":
           description: Cluster not found
     delete:
       summary: Delete a cluster
       operationId: deleteCluster
       security:
-        - bearerAuth: [cluster_admin]
-        - basicAuth: [cluster_admin]
+        - bearerAuth: []
+        - basicAuth: []
       parameters:
         - name: clusterId
           in: path
@@ -88,10 +88,93 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        "204":
           description: Cluster deleted
-        '404':
+        "404":
           description: Cluster not found
+  /v1/management_clusters:
+    get:
+      summary: List all management clusters
+      operationId: listManagementClusters
+      security:
+        - bearerAuth: [cluster_admin]
+        - basicAuth: [cluster_admin]
+      responses:
+        "200":
+          description: List of management clusters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ManagementCluster"
+        "404":
+          description: No management cluster found
+    post:
+      summary: Create a new management cluster
+      operationId: createManagementCluster
+      security:
+        - bearerAuth: [cluster_admin]
+        - basicAuth: [cluster_admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManagementCluster"
+      responses:
+        "201":
+          description: Management cluster created, returns hydrated management cluster
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagementCluster"
+        "400":
+          description: Invalid input
+        "409":
+          description: Management cluster already exists
+
+  /v1/management_clusters/{managementClusterId}:
+    get:
+      summary: Get a management cluster
+      operationId: getManagementCluster
+      security:
+        - bearerAuth: [cluster_admin]
+        - basicAuth: [cluster_admin]
+      parameters:
+        - name: managementClusterId
+          in: path
+          required: true
+          description: Management cluster ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Management cluster found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagementCluster"
+        "404":
+          description: Management cluster not found
+    delete:
+      summary: Delete a management cluster
+      operationId: deleteManagementCluster
+      security:
+        - bearerAuth: [cluster_admin]
+        - basicAuth: [cluster_admin]
+      parameters:
+        - name: managementClusterId
+          in: path
+          required: true
+          description: Management cluster ID
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Management cluster deleted
+        "404":
+          description: Management cluster not found
 components:
   securitySchemes:
     bearerAuth:
@@ -101,20 +184,40 @@ components:
       type: http
       scheme: basic
   schemas:
-    Cluster:
+    Kubeconfig:
+      type: string
+    BaseCluster:
       type: object
       properties:
-        id:
-          type: string
         name:
           type: string
-        status:
-          type: object
-          properties:
-            online:
-              type: boolean
-        kubeconfig:
+        region:
           type: string
       required:
         - name
-
+        - region
+    Cluster:
+      allof:
+        - $ref: "#/components/schemas/BaseCluster"
+        - type: object
+          properties:
+            id:
+              type: string
+            status:
+              type: object
+              properties:
+                online:
+                  type: boolean
+                phase:
+                  type: string
+              required:
+                - online
+                - phase
+    ManagementCluster:
+      allof:
+        - $ref: "#/components/schemas/BaseCluster"
+        - $ref: "#/components/schemas/Kubeconfig"
+        - type: object
+          properties:
+            id:
+              type: string

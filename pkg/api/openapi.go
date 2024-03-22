@@ -22,22 +22,22 @@ import (
 )
 
 const (
+	BasicScopes      = "basic.Scopes"
 	BasicAuthScopes  = "basicAuth.Scopes"
 	BearerAuthScopes = "bearerAuth.Scopes"
 )
 
 // Cluster defines model for Cluster.
-type Cluster struct {
-	Id         *string `json:"id,omitempty"`
-	Kubeconfig *string `json:"kubeconfig,omitempty"`
-	Name       string  `json:"name"`
-	Status     *struct {
-		Online *bool `json:"online,omitempty"`
-	} `json:"status,omitempty"`
-}
+type Cluster = interface{}
+
+// ManagementCluster defines model for ManagementCluster.
+type ManagementCluster = interface{}
 
 // CreateClusterJSONRequestBody defines body for CreateCluster for application/json ContentType.
 type CreateClusterJSONRequestBody = Cluster
+
+// CreateManagementClusterJSONRequestBody defines body for CreateManagementCluster for application/json ContentType.
+type CreateManagementClusterJSONRequestBody = ManagementCluster
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -112,6 +112,9 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// ListClusters request
+	ListClusters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreateCluster request with any body
 	CreateClusterWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -122,6 +125,32 @@ type ClientInterface interface {
 
 	// GetCluster request
 	GetCluster(ctx context.Context, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListManagementClusters request
+	ListManagementClusters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateManagementCluster request with any body
+	CreateManagementClusterWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateManagementCluster(ctx context.Context, body CreateManagementClusterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteManagementCluster request
+	DeleteManagementCluster(ctx context.Context, managementClusterId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetManagementCluster request
+	GetManagementCluster(ctx context.Context, managementClusterId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) ListClusters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListClustersRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) CreateClusterWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -170,6 +199,93 @@ func (c *Client) GetCluster(ctx context.Context, clusterId string, reqEditors ..
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+func (c *Client) ListManagementClusters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListManagementClustersRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateManagementClusterWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateManagementClusterRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateManagementCluster(ctx context.Context, body CreateManagementClusterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateManagementClusterRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteManagementCluster(ctx context.Context, managementClusterId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteManagementClusterRequest(c.Server, managementClusterId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetManagementCluster(ctx context.Context, managementClusterId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetManagementClusterRequest(c.Server, managementClusterId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewListClustersRequest generates requests for ListClusters
+func NewListClustersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/clusters")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // NewCreateClusterRequest calls the generic CreateCluster builder with application/json body
@@ -280,6 +396,141 @@ func NewGetClusterRequest(server string, clusterId string) (*http.Request, error
 	return req, nil
 }
 
+// NewListManagementClustersRequest generates requests for ListManagementClusters
+func NewListManagementClustersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/management_clusters")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateManagementClusterRequest calls the generic CreateManagementCluster builder with application/json body
+func NewCreateManagementClusterRequest(server string, body CreateManagementClusterJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateManagementClusterRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateManagementClusterRequestWithBody generates requests for CreateManagementCluster with any type of body
+func NewCreateManagementClusterRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/management_clusters")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteManagementClusterRequest generates requests for DeleteManagementCluster
+func NewDeleteManagementClusterRequest(server string, managementClusterId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "managementClusterId", runtime.ParamLocationPath, managementClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/management_clusters/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetManagementClusterRequest generates requests for GetManagementCluster
+func NewGetManagementClusterRequest(server string, managementClusterId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "managementClusterId", runtime.ParamLocationPath, managementClusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/management_clusters/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -323,6 +574,9 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// ListClusters request
+	ListClustersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListClustersResponse, error)
+
 	// CreateCluster request with any body
 	CreateClusterWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateClusterResponse, error)
 
@@ -333,6 +587,42 @@ type ClientWithResponsesInterface interface {
 
 	// GetCluster request
 	GetClusterWithResponse(ctx context.Context, clusterId string, reqEditors ...RequestEditorFn) (*GetClusterResponse, error)
+
+	// ListManagementClusters request
+	ListManagementClustersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListManagementClustersResponse, error)
+
+	// CreateManagementCluster request with any body
+	CreateManagementClusterWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateManagementClusterResponse, error)
+
+	CreateManagementClusterWithResponse(ctx context.Context, body CreateManagementClusterJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateManagementClusterResponse, error)
+
+	// DeleteManagementCluster request
+	DeleteManagementClusterWithResponse(ctx context.Context, managementClusterId string, reqEditors ...RequestEditorFn) (*DeleteManagementClusterResponse, error)
+
+	// GetManagementCluster request
+	GetManagementClusterWithResponse(ctx context.Context, managementClusterId string, reqEditors ...RequestEditorFn) (*GetManagementClusterResponse, error)
+}
+
+type ListClustersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]Cluster
+}
+
+// Status returns HTTPResponse.Status
+func (r ListClustersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListClustersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type CreateClusterResponse struct {
@@ -400,6 +690,102 @@ func (r GetClusterResponse) StatusCode() int {
 	return 0
 }
 
+type ListManagementClustersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]ManagementCluster
+}
+
+// Status returns HTTPResponse.Status
+func (r ListManagementClustersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListManagementClustersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateManagementClusterResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *ManagementCluster
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateManagementClusterResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateManagementClusterResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteManagementClusterResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteManagementClusterResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteManagementClusterResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetManagementClusterResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ManagementCluster
+}
+
+// Status returns HTTPResponse.Status
+func (r GetManagementClusterResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetManagementClusterResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ListClustersWithResponse request returning *ListClustersResponse
+func (c *ClientWithResponses) ListClustersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListClustersResponse, error) {
+	rsp, err := c.ListClusters(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListClustersResponse(rsp)
+}
+
 // CreateClusterWithBodyWithResponse request with arbitrary body returning *CreateClusterResponse
 func (c *ClientWithResponses) CreateClusterWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateClusterResponse, error) {
 	rsp, err := c.CreateClusterWithBody(ctx, contentType, body, reqEditors...)
@@ -433,6 +819,76 @@ func (c *ClientWithResponses) GetClusterWithResponse(ctx context.Context, cluste
 		return nil, err
 	}
 	return ParseGetClusterResponse(rsp)
+}
+
+// ListManagementClustersWithResponse request returning *ListManagementClustersResponse
+func (c *ClientWithResponses) ListManagementClustersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListManagementClustersResponse, error) {
+	rsp, err := c.ListManagementClusters(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListManagementClustersResponse(rsp)
+}
+
+// CreateManagementClusterWithBodyWithResponse request with arbitrary body returning *CreateManagementClusterResponse
+func (c *ClientWithResponses) CreateManagementClusterWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateManagementClusterResponse, error) {
+	rsp, err := c.CreateManagementClusterWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateManagementClusterResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateManagementClusterWithResponse(ctx context.Context, body CreateManagementClusterJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateManagementClusterResponse, error) {
+	rsp, err := c.CreateManagementCluster(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateManagementClusterResponse(rsp)
+}
+
+// DeleteManagementClusterWithResponse request returning *DeleteManagementClusterResponse
+func (c *ClientWithResponses) DeleteManagementClusterWithResponse(ctx context.Context, managementClusterId string, reqEditors ...RequestEditorFn) (*DeleteManagementClusterResponse, error) {
+	rsp, err := c.DeleteManagementCluster(ctx, managementClusterId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteManagementClusterResponse(rsp)
+}
+
+// GetManagementClusterWithResponse request returning *GetManagementClusterResponse
+func (c *ClientWithResponses) GetManagementClusterWithResponse(ctx context.Context, managementClusterId string, reqEditors ...RequestEditorFn) (*GetManagementClusterResponse, error) {
+	rsp, err := c.GetManagementCluster(ctx, managementClusterId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetManagementClusterResponse(rsp)
+}
+
+// ParseListClustersResponse parses an HTTP response from a ListClustersWithResponse call
+func ParseListClustersResponse(rsp *http.Response) (*ListClustersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListClustersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Cluster
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseCreateClusterResponse parses an HTTP response from a CreateClusterWithResponse call
@@ -503,8 +959,105 @@ func ParseGetClusterResponse(rsp *http.Response) (*GetClusterResponse, error) {
 	return response, nil
 }
 
+// ParseListManagementClustersResponse parses an HTTP response from a ListManagementClustersWithResponse call
+func ParseListManagementClustersResponse(rsp *http.Response) (*ListManagementClustersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListManagementClustersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []ManagementCluster
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateManagementClusterResponse parses an HTTP response from a CreateManagementClusterWithResponse call
+func ParseCreateManagementClusterResponse(rsp *http.Response) (*CreateManagementClusterResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateManagementClusterResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ManagementCluster
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteManagementClusterResponse parses an HTTP response from a DeleteManagementClusterWithResponse call
+func ParseDeleteManagementClusterResponse(rsp *http.Response) (*DeleteManagementClusterResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteManagementClusterResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseGetManagementClusterResponse parses an HTTP response from a GetManagementClusterWithResponse call
+func ParseGetManagementClusterResponse(rsp *http.Response) (*GetManagementClusterResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetManagementClusterResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ManagementCluster
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// List all clusters
+	// (GET /v1/clusters)
+	ListClusters(ctx echo.Context) error
 	// Create a new cluster
 	// (POST /v1/clusters)
 	CreateCluster(ctx echo.Context) error
@@ -514,6 +1067,18 @@ type ServerInterface interface {
 	// Get a cluster
 	// (GET /v1/clusters/{clusterId})
 	GetCluster(ctx echo.Context, clusterId string) error
+	// List all management clusters
+	// (GET /v1/management_clusters)
+	ListManagementClusters(ctx echo.Context) error
+	// Create a new management cluster
+	// (POST /v1/management_clusters)
+	CreateManagementCluster(ctx echo.Context) error
+	// Delete a management cluster
+	// (DELETE /v1/management_clusters/{managementClusterId})
+	DeleteManagementCluster(ctx echo.Context, managementClusterId string) error
+	// Get a management cluster
+	// (GET /v1/management_clusters/{managementClusterId})
+	GetManagementCluster(ctx echo.Context, managementClusterId string) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -521,13 +1086,26 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
+// ListClusters converts echo context to params.
+func (w *ServerInterfaceWrapper) ListClusters(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{""})
+
+	ctx.Set(BasicScopes, []string{""})
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.ListClusters(ctx)
+	return err
+}
+
 // CreateCluster converts echo context to params.
 func (w *ServerInterfaceWrapper) CreateCluster(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{"cluster_admin"})
+	ctx.Set(BearerAuthScopes, []string{""})
 
-	ctx.Set(BasicAuthScopes, []string{"cluster_admin"})
+	ctx.Set(BasicAuthScopes, []string{""})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.CreateCluster(ctx)
@@ -545,9 +1123,9 @@ func (w *ServerInterfaceWrapper) DeleteCluster(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter clusterId: %s", err))
 	}
 
-	ctx.Set(BearerAuthScopes, []string{"cluster_admin"})
+	ctx.Set(BearerAuthScopes, []string{""})
 
-	ctx.Set(BasicAuthScopes, []string{"cluster_admin"})
+	ctx.Set(BasicAuthScopes, []string{""})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.DeleteCluster(ctx, clusterId)
@@ -571,6 +1149,72 @@ func (w *ServerInterfaceWrapper) GetCluster(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.GetCluster(ctx, clusterId)
+	return err
+}
+
+// ListManagementClusters converts echo context to params.
+func (w *ServerInterfaceWrapper) ListManagementClusters(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{"cluster_admin"})
+
+	ctx.Set(BasicAuthScopes, []string{"cluster_admin"})
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.ListManagementClusters(ctx)
+	return err
+}
+
+// CreateManagementCluster converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateManagementCluster(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{"cluster_admin"})
+
+	ctx.Set(BasicAuthScopes, []string{"cluster_admin"})
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.CreateManagementCluster(ctx)
+	return err
+}
+
+// DeleteManagementCluster converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteManagementCluster(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "managementClusterId" -------------
+	var managementClusterId string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "managementClusterId", runtime.ParamLocationPath, ctx.Param("managementClusterId"), &managementClusterId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter managementClusterId: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"cluster_admin"})
+
+	ctx.Set(BasicAuthScopes, []string{"cluster_admin"})
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.DeleteManagementCluster(ctx, managementClusterId)
+	return err
+}
+
+// GetManagementCluster converts echo context to params.
+func (w *ServerInterfaceWrapper) GetManagementCluster(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "managementClusterId" -------------
+	var managementClusterId string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "managementClusterId", runtime.ParamLocationPath, ctx.Param("managementClusterId"), &managementClusterId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter managementClusterId: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"cluster_admin"})
+
+	ctx.Set(BasicAuthScopes, []string{"cluster_admin"})
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetManagementCluster(ctx, managementClusterId)
 	return err
 }
 
@@ -602,27 +1246,35 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.GET(baseURL+"/v1/clusters", wrapper.ListClusters)
 	router.POST(baseURL+"/v1/clusters", wrapper.CreateCluster)
 	router.DELETE(baseURL+"/v1/clusters/:clusterId", wrapper.DeleteCluster)
 	router.GET(baseURL+"/v1/clusters/:clusterId", wrapper.GetCluster)
+	router.GET(baseURL+"/v1/management_clusters", wrapper.ListManagementClusters)
+	router.POST(baseURL+"/v1/management_clusters", wrapper.CreateManagementCluster)
+	router.DELETE(baseURL+"/v1/management_clusters/:managementClusterId", wrapper.DeleteManagementCluster)
+	router.GET(baseURL+"/v1/management_clusters/:managementClusterId", wrapper.GetManagementCluster)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8xUW2/bPAz9KwK/79FInK0v81svQBGsGwbsMS0GxWISdTalSXQ2I/B/HyTFSZwL1mEX",
-	"7KVVKNKHPOdQGyhNbQ0hsYdiA75cYS3j8bZqPKMLR+uMRcca44VW4S+3FqEAz07TEroMPjdzLA0t9PLs",
-	"Nckaz154ltz4UxhDlabDkrkxFUqCrsv6kJk/Y8kx4vBLox0qKGYJ6+lclseycZrbj2HOhDOXXpfXDa92",
-	"80ewEIXdJ1bMNjQ7R+nQnWbH8HF6ANS0MCG1NMSy5HBMTMCD0aW4qQyH7yr0pdOWtSEo4JrE9YepYCNK",
-	"h5JRvG3m6AgZvSiTLF4YEgprSSqcrDNrrVAdZD5SLUkusUbiXdXokUKXmqvQwjtZtUvjAxhksEbnE/5k",
-	"lI/y0JaxSNJqKOD1aDLKIQMreRVpG68n4/6rUTzj43RLjP+CkjKMM1VQQKU93/bJQStvDfnE/6s87wlC",
-	"irXS2kqXsXr87ENHvTGj/RjrWPi/wwUU8N94b+Hx1r/j3rx7q0jnZJs0GZL9oD0Ls9hRFGqu8quAMEx8",
-	"b/ocsTANqYGhoJhtBu6YPXXZ1lzxx1MGvqlr6doeU1bVAHRI2W1Uvp8j+Rs93xjV/hRdL2JpuEDsGuxO",
-	"VJr8Gdghx9urre9VJhxy48iLVatciPSMJZXyU5WmtJaVVkKTbThlvTnN6nFk5VCqVuA37dn/QFHYYn+S",
-	"qtYEe4Ev3Q80T4IKKQi/7qfossEmjTfb01R1qesKGU8X6i7G9+6w0ska0y7OLg07vYPwIEERtxj6Nxl2",
-	"kHDsguxA0aOHOwx35JCryzynOdTF3erzyPCLluvXpEjsCXloprPv1j3yP8Zx/je3cKvEb9LsRKQjVe6R",
-	"DyXpuu57AAAA///+5PgHnggAAA==",
+	"H4sIAAAAAAAC/9RWUY/iNhD+K5bbx4hk231p3nbvpBNqt6rURw6dTDyAT4nt2hPaCOW/V3ZwIMShIHps",
+	"+4KMmfGMv+8bf+xpoSqtJEi0NN9TW2yhYn75oawtgnFLVpZqTfPFnn5vYE1z+l16TEsPOekrsxCS2mRP",
+	"tVEaDArwxwnuPrHRQHNq0Qi5oW1CLTKsfcAwXMlSSDhJWSlVApMuR2+ZhchpbUIN/FELA5zmi3BEiF8m",
+	"IV6tvkKBPv5sZ9km9I1JtoEKJN6NwKXYn+sVFEquxeZasGLtOgShqI3A5nd3cJe+YlYULzVue0o9gm6X",
+	"9odsEbVDcwXMgBlH++3zcFdQyLVyoYWSyAp0S8l8zi9KFOS1VOjO5WALIzQKJWlOXyR5+W1OUJHCAEMg",
+	"7v5GAoIlRQeZJUoSDhWT3K20UTvBgZ9EfpZVT06fNfssXZcCS9fCGyubjbKuGE3oDozt6j/Nslnm2lIa",
+	"JNOC5vTH2dMsc/JguPWwpbunNJzqvm/AX84Rw9w15tzdUdggDEud4KxW0na4/5BlARiQPpdpXYrCZ6df",
+	"reskzJinGaHyiZeEchRUoIIZw5qOiyHIrjei1j00Luc5e3YVhoG/qhBD1qqWnJ4Kycv8VBWLpVNoJx/3",
+	"ZZlQW1cVM02oycpyUFQrG4Hug2c+3KcbVrD4qnhzE2xXoTV8DdDU0I7Yevo2ZYdYH3466J4nxADWRlqy",
+	"bbhxOwG5jq1szNZc7lgpOBFS19hF/TSOCnVYaYDxhsBfwqK9mtl+Y8BuRxlhRMKfxz7bZDAr6f6wmvO2",
+	"66sEhDH/H/3+kX/NDKugm7bF1HXmH6l7cmju55Qm4a3pS9JznpMTzs6f0OVIA8/TSHb34JNTFOKkwhvH",
+	"KA52hw9hp4KIvkGfAP9jKGaPnKQD1g9i5RPgKSUH7R+N6MtVljH6V/EY8xj/mbnBRiJme8lRxuFX4R80",
+	"+IXxSkg6omP0e9x+Jpq95ERjcL6NJ0VIeKw7TTQwZPBtTN+0ZY3RvtO9ItVvMrL7VDSwudjdpqc+3Vfn",
+	"6F5lgzHxXXzKIwhNveqRjv59l4z080+GGUm59pW+j9/eWeO6nTLZ/xdH2bu/F5eN+d3Y7xw8OtZt+3cA",
+	"AAD//wuSuhUCEQAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -9,7 +9,8 @@ in {
       shellcheck.enable = true;
       statix.enable = true;
 	  gofmt.enable = true;
-	  govet.enable = true;
+	  # disabled for now due to wrong golang version
+	  # govet.enable = true;
     };
     settings = {};
   };
