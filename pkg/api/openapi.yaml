@@ -1,0 +1,120 @@
+openapi: 3.1.0
+info:
+  title: Malygos API
+  description: |
+    An API to create Kubernetes clusters on demand on provided Kubernetes
+    management clusters.
+  contact:
+    name: "Loic Blot"
+  version: 1.0.0
+servers: []
+paths:
+  # Cluster management
+  /v1/clusters:
+    post:
+      summary: Create a new cluster
+      operationId: createCluster
+      security:
+        - bearerAuth: [cluster_admin]
+        - basicAuth: [cluster_admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Cluster"
+      responses:
+        '201':
+          description: Cluster created, returns hydrated cluster
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cluster"
+        '400':
+          description: Invalid input
+        '409':
+          description: Cluster already exists
+      get:
+        summary: List all clusters
+        operationId: listClusters
+        security:
+          - bearerAuth: []
+          - basic: []
+        responses:
+          '200':
+            description: List of clusters
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Cluster"
+          '404':
+            description: No cluster found
+  /v1/clusters/{clusterId}:
+    get:
+      summary: Get a cluster
+      operationId: getCluster
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      parameters:
+        - name: clusterId
+          in: path
+          required: true
+          description: Cluster ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cluster found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cluster"
+        '404':
+          description: Cluster not found
+    delete:
+      summary: Delete a cluster
+      operationId: deleteCluster
+      security:
+        - bearerAuth: [cluster_admin]
+        - basicAuth: [cluster_admin]
+      parameters:
+        - name: clusterId
+          in: path
+          required: true
+          description: Cluster ID
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cluster deleted
+        '404':
+          description: Cluster not found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    Cluster:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: object
+          properties:
+            online:
+              type: boolean
+        kubeconfig:
+          type: string
+      required:
+        - name
+
