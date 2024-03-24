@@ -1,9 +1,15 @@
 package clustermanager
 
-type KamajiClusterManager struct{}
+import "k8s.io/client-go/kubernetes"
 
-func NewKamajiClusterManager() *KamajiClusterManager {
-	return &KamajiClusterManager{}
+type KamajiClusterManager struct {
+	client *kubernetes.Clientset
+}
+
+func NewKamajiClusterManager(client *kubernetes.Clientset) *KamajiClusterManager {
+	return &KamajiClusterManager{
+		client: client,
+	}
 }
 
 func (m *KamajiClusterManager) Create(cluster *Cluster) (*Cluster, error) {

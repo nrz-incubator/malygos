@@ -1,9 +1,17 @@
 package managementclustermanager
 
-type InKubeClusterManager struct{}
+import (
+	"k8s.io/client-go/kubernetes"
+)
 
-func NewInKubeClusterManager() *InKubeClusterManager {
-	return &InKubeClusterManager{}
+type InKubeClusterManager struct {
+	client *kubernetes.Clientset
+}
+
+func NewInKubeClusterManager(client *kubernetes.Clientset) *InKubeClusterManager {
+	return &InKubeClusterManager{
+		client: client,
+	}
 }
 
 func (m *InKubeClusterManager) Create(cluster *ManagementCluster) (*ManagementCluster, error) {

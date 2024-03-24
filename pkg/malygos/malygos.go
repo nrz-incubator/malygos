@@ -14,11 +14,12 @@ import (
 	"github.com/nrz-k8s-incubator/malygos/pkg/malygos/managementclustermanager"
 	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type Malygos struct {
-	httpPort int
-	k8s      kubernetes.Clientset
+	httpPort   int
+	kubeconfig string
 }
 
 func New() *Malygos {
@@ -40,8 +41,6 @@ func (m *Malygos) Run() error {
 		return err
 	}
 
-	// TODO: instanciate the k8s client to hold configs
-
 	e := echo.New()
 	e.Use(middleware.LoggerWithConfig(loggerConfig()))
 	e.Use(middleware.Recover())
@@ -49,8 +48,20 @@ func (m *Malygos) Run() error {
 	p := prometheus.NewPrometheus("echo", nil)
 	p.Use(e)
 
-	inKubeClusterManager := managementclustermanager.NewInKubeClusterManager()
-	kamajiClusterManager := clustermanager.NewKamajiClusterManager()
+	config, err := clientcmd.BuildConfigFromFlags("", m.kubeconfig)
+	if err != nil {
+		logger.Error(err, "failed to build k8s config")
+		return err
+	}
+
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		logger.Error(err, "failed to create k8s client")
+		return err
+	}
+
+	inKubeClusterManager := managementclustermanager.NewInKubeClusterManager(client)
+	kamajiClusterManager := clustermanager.NewKamajiClusterManager(client)
 
 	myAPI := api.NewApiImpl(logger, kamajiClusterManager, inKubeClusterManager)
 	api.RegisterHandlers(e, myAPI)
