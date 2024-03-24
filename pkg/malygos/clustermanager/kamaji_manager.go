@@ -1,14 +1,19 @@
 package clustermanager
 
-import "k8s.io/client-go/kubernetes"
+import (
+	"github.com/go-logr/logr"
+	"k8s.io/client-go/kubernetes"
+)
 
 type KamajiClusterManager struct {
 	client *kubernetes.Clientset
+	logger logr.Logger
 }
 
-func NewKamajiClusterManager(client *kubernetes.Clientset) *KamajiClusterManager {
+func NewKamajiClusterManager(logger logr.Logger, client *kubernetes.Clientset) *KamajiClusterManager {
 	return &KamajiClusterManager{
 		client: client,
+		logger: logger,
 	}
 }
 

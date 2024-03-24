@@ -60,8 +60,8 @@ func (m *Malygos) Run() error {
 		return err
 	}
 
-	inKubeClusterManager := managementclustermanager.NewInKubeClusterManager(client)
-	kamajiClusterManager := clustermanager.NewKamajiClusterManager(client)
+	inKubeClusterManager := managementclustermanager.NewInKubeClusterManager(logger, client)
+	kamajiClusterManager := clustermanager.NewKamajiClusterManager(logger, client)
 
 	myAPI := api.NewApiImpl(logger, kamajiClusterManager, inKubeClusterManager)
 	api.RegisterHandlers(e, myAPI)

@@ -25,11 +25,25 @@ func (api *ApiImpl) ListManagementClusters(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	_, err := api.managementClusterManager.List()
+	clusters, err := api.managementClusterManager.List()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
-	return c.JSON(http.StatusOK, nil)
+
+	clusterResp := []ManagementCluster{}
+
+	for _, cluster := range clusters {
+		clusterResp = append(clusterResp, ManagementCluster{
+			Id:         &cluster.ID,
+			Name:       cluster.Name,
+			Kubeconfig: &cluster.Kubeconfig,
+			Region:     cluster.Region,
+		})
+	}
+
+	return c.JSON(http.StatusOK, ListManagementClustersResponse{
+		JSON200: &clusterResp,
+	})
 }
 
 func (api *ApiImpl) GetManagementCluster(c echo.Context, id string) error {

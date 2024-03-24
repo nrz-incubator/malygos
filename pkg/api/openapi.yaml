@@ -214,10 +214,16 @@ components:
                 - online
                 - phase
     ManagementCluster:
-      allof:
-        - $ref: "#/components/schemas/BaseCluster"
-        - $ref: "#/components/schemas/Kubeconfig"
-        - type: object
-          properties:
-            id:
-              type: string
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        region:
+          type: string
+        kubeconfig:
+          type: string
+      required:
+        - name
+        - region
