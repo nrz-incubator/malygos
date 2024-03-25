@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/nrz-k8s-incubator/malygos/pkg/malygos"
+	"github.com/nrz-incubator/malygos/pkg/malygos"
 	_ "go.uber.org/automaxprocs"
 )
 

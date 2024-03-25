@@ -2,9 +2,9 @@ package api
 
 import (
 	"github.com/go-logr/logr"
-	"github.com/nrz-k8s-incubator/malygos/pkg/malygos/clustermanager"
-	"github.com/nrz-k8s-incubator/malygos/pkg/malygos/managementclustermanager"
-	"github.com/nrz-k8s-incubator/malygos/pkg/malygos/rbac"
+	"github.com/nrz-incubator/malygos/pkg/malygos/clustermanager"
+	"github.com/nrz-incubator/malygos/pkg/malygos/managementclustermanager"
+	"github.com/nrz-incubator/malygos/pkg/malygos/rbac"
 )
 
 type ApiImpl struct {

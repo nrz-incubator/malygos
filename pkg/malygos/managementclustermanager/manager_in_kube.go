@@ -5,12 +5,17 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"github.com/nrz-incubator/malygos/pkg/util"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 const (
-	managementClusterSecretType = "malygos.local/management-cluster"
+	managementClusterSecretType          = "malygos.local/management-cluster"
+	managementClusterLabelRegion         = "malygos.local/region"
+	managementClusterLabelName           = "malygos.local/name"
+	managementClusterGeneratedNameLength = 10
 )
 
 type InKubeClusterManager struct {
@@ -27,10 +32,46 @@ func NewInKubeClusterManager(logger logr.Logger, client *kubernetes.Clientset) *
 }
 
 func (m *InKubeClusterManager) Create(cluster *ManagementCluster) (*ManagementCluster, error) {
-	return cluster, nil
+	mc, err := m.Get(cluster.ID)
+	if err != nil {
+		m.logger.Error(err, "failed to get management cluster", "id", cluster.ID)
+	}
+
+	if mc != nil {
+		return nil, fmt.Errorf("management cluster already exists")
+	}
+
+	secretName := generateSecretName()
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+			Labels: map[string]string{
+				managementClusterLabelRegion: cluster.Region,
+				managementClusterLabelName:   cluster.Name,
+			},
+		},
+		Type: managementClusterSecretType,
+		Data: map[string][]byte{
+			"kubeconfig": []byte(cluster.Kubeconfig),
+		},
+	}
+
+	secret, err = m.client.CoreV1().Secrets(m.cfgNamespace).Create(context.TODO(), secret, metav1.CreateOptions{})
+	cluster.ID = secret.Name
+	return cluster, err
 }
 
 func (m *InKubeClusterManager) Delete(id string) error {
+	_, err := m.Get(id)
+	if err != nil {
+		return err
+	}
+
+	err = m.client.CoreV1().Secrets(m.cfgNamespace).Delete(context.TODO(), id, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -43,37 +84,58 @@ func (m *InKubeClusterManager) List() ([]*ManagementCluster, error) {
 	clusters := make([]*ManagementCluster, 0)
 
 	for _, secret := range secrets.Items {
-		if secret.Type != managementClusterSecretType {
+		mc, err := decodeSecret(&secret)
+		if err != nil {
+			m.logger.Error(err, "failed to decode secret", "secret", secret.Name)
 			continue
 		}
 
-		if _, ok := secret.Data["kubeconfig"]; !ok {
-			m.logger.Error(fmt.Errorf("kubeconfig not found in secret"), "secret", m.cfgNamespace, secret.Name)
-			continue
-		}
-
-		if _, ok := secret.Data["region"]; !ok {
-			m.logger.Error(fmt.Errorf("region not found in secret"), "secret, m.cfgNamespace, secret.Name")
-			continue
-		}
-
-		// config, err := clientcmd.RESTConfigFromKubeConfig(secret.Data["kubeconfig"])
-		// if err != nil {
-		// 	m.logger.Error(err, "failed to load kubeconfig from secret", "secret", m.cfgNamespace, secret.Name)
-		// 	continue
-		// }
-
-		clusters = append(clusters, &ManagementCluster{
-			ID:         string(secret.UID),
-			Name:       secret.Name,
-			Kubeconfig: string(secret.Data["kubeconfig"]),
-			Region:     string(secret.Data["region"]),
-		})
+		clusters = append(clusters, mc)
 	}
 	return clusters, nil
 }
 
 func (m *InKubeClusterManager) Get(id string) (*ManagementCluster, error) {
+	secret := &v1.Secret{}
+	secret, err := m.client.CoreV1().Secrets(m.cfgNamespace).Get(context.TODO(), id, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return decodeSecret(secret)
+}
+
+func decodeSecret(secret *v1.Secret) (*ManagementCluster, error) {
+	if secret.Type != managementClusterSecretType {
+		return nil, fmt.Errorf("secret type is not %s", managementClusterSecretType)
+	}
+
+	if _, ok := secret.Data["kubeconfig"]; !ok {
+		return nil, fmt.Errorf("kubeconfig not found in secret")
+	}
+
+	if _, ok := secret.Labels["region"]; !ok {
+		return nil, fmt.Errorf("region label not found in secret")
+	}
+
+	if _, ok := secret.Labels["name"]; !ok {
+		return nil, fmt.Errorf("name label not found in secret")
+	}
+
+	return &ManagementCluster{
+		ID:         string(secret.Name),
+		Name:       string(secret.Labels["name"]),
+		Kubeconfig: string(secret.Data["kubeconfig"]),
+		Region:     string(secret.Labels["region"]),
+	}, nil
+}
+
+func generateSecretName() string {
+	return fmt.Sprintf("malygos-mc-%s", util.GenerateRandomString(managementClusterGeneratedNameLength))
+}
+
+func getIDFromSecretName(secretName string) (string, error) {
+	var id string
+	_, err := fmt.Sscanf(secretName, "malygos-mc-%s", &id)
+	return id, err
 }
