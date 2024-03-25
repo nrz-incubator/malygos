@@ -1,6 +1,6 @@
-module github.com/nrz-k8s-incubator/malygos
+module github.com/nrz-incubator/malygos
 
-go 1.22
+go 1.21
 
 require (
 	github.com/deepmap/oapi-codegen v1.16.2

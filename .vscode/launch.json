@@ -9,7 +9,10 @@
 			"type": "go",
 			"request": "launch",
 			"mode": "auto",
-			"program": "${workspaceFolder}/cmd/malygos"
+			"program": "${workspaceFolder}/cmd/malygos",
+			"env": {
+				"CGO_ENABLED": "0",
+			}
 		}
 	]
 }
