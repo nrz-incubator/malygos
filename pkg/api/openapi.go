@@ -28,7 +28,22 @@ const (
 )
 
 // Cluster defines model for Cluster.
-type Cluster = interface{}
+type Cluster struct {
+	Id         *string        `json:"id,omitempty"`
+	Kubeconfig *Kubeconfig    `json:"kubeconfig,omitempty"`
+	Name       string         `json:"name"`
+	Region     string         `json:"region"`
+	Status     *ClusterStatus `json:"status,omitempty"`
+}
+
+// ClusterStatus defines model for ClusterStatus.
+type ClusterStatus struct {
+	Online bool   `json:"online"`
+	Phase  string `json:"phase"`
+}
+
+// Kubeconfig defines model for Kubeconfig.
+type Kubeconfig = string
 
 // ManagementCluster defines model for ManagementCluster.
 type ManagementCluster struct {
@@ -126,10 +141,10 @@ type ClientInterface interface {
 	CreateCluster(ctx context.Context, body CreateClusterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteCluster request
-	DeleteCluster(ctx context.Context, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteCluster(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetCluster request
-	GetCluster(ctx context.Context, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetCluster(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListManagementClusters request
 	ListManagementClusters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -182,8 +197,8 @@ func (c *Client) CreateCluster(ctx context.Context, body CreateClusterJSONReques
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteCluster(ctx context.Context, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteClusterRequest(c.Server, clusterId)
+func (c *Client) DeleteCluster(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteClusterRequest(c.Server, region, clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -194,8 +209,8 @@ func (c *Client) DeleteCluster(ctx context.Context, clusterId string, reqEditors
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetCluster(ctx context.Context, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetClusterRequest(c.Server, clusterId)
+func (c *Client) GetCluster(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetClusterRequest(c.Server, region, clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -334,12 +349,19 @@ func NewCreateClusterRequestWithBody(server string, contentType string, body io.
 }
 
 // NewDeleteClusterRequest generates requests for DeleteCluster
-func NewDeleteClusterRequest(server string, clusterId string) (*http.Request, error) {
+func NewDeleteClusterRequest(server string, region string, clusterId string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "clusterId", runtime.ParamLocationPath, clusterId)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "region", runtime.ParamLocationPath, region)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "clusterId", runtime.ParamLocationPath, clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +371,7 @@ func NewDeleteClusterRequest(server string, clusterId string) (*http.Request, er
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/v1/clusters/%s", pathParam0)
+	operationPath := fmt.Sprintf("/v1/clusters/%s/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -368,12 +390,19 @@ func NewDeleteClusterRequest(server string, clusterId string) (*http.Request, er
 }
 
 // NewGetClusterRequest generates requests for GetCluster
-func NewGetClusterRequest(server string, clusterId string) (*http.Request, error) {
+func NewGetClusterRequest(server string, region string, clusterId string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "clusterId", runtime.ParamLocationPath, clusterId)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "region", runtime.ParamLocationPath, region)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "clusterId", runtime.ParamLocationPath, clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -383,7 +412,7 @@ func NewGetClusterRequest(server string, clusterId string) (*http.Request, error
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/v1/clusters/%s", pathParam0)
+	operationPath := fmt.Sprintf("/v1/clusters/%s/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -588,10 +617,10 @@ type ClientWithResponsesInterface interface {
 	CreateClusterWithResponse(ctx context.Context, body CreateClusterJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateClusterResponse, error)
 
 	// DeleteCluster request
-	DeleteClusterWithResponse(ctx context.Context, clusterId string, reqEditors ...RequestEditorFn) (*DeleteClusterResponse, error)
+	DeleteClusterWithResponse(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*DeleteClusterResponse, error)
 
 	// GetCluster request
-	GetClusterWithResponse(ctx context.Context, clusterId string, reqEditors ...RequestEditorFn) (*GetClusterResponse, error)
+	GetClusterWithResponse(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*GetClusterResponse, error)
 
 	// ListManagementClusters request
 	ListManagementClustersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListManagementClustersResponse, error)
@@ -611,7 +640,10 @@ type ClientWithResponsesInterface interface {
 type ListClustersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *[]Cluster
+	JSON200      *struct {
+		Clusters []Cluster `json:"clusters"`
+		Warnings *[]string `json:"warnings,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
@@ -698,7 +730,10 @@ func (r GetClusterResponse) StatusCode() int {
 type ListManagementClustersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *[]ManagementCluster
+	JSON200      *struct {
+		Clusters []ManagementCluster `json:"clusters"`
+		Warnings *[]string           `json:"warnings,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
@@ -809,8 +844,8 @@ func (c *ClientWithResponses) CreateClusterWithResponse(ctx context.Context, bod
 }
 
 // DeleteClusterWithResponse request returning *DeleteClusterResponse
-func (c *ClientWithResponses) DeleteClusterWithResponse(ctx context.Context, clusterId string, reqEditors ...RequestEditorFn) (*DeleteClusterResponse, error) {
-	rsp, err := c.DeleteCluster(ctx, clusterId, reqEditors...)
+func (c *ClientWithResponses) DeleteClusterWithResponse(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*DeleteClusterResponse, error) {
+	rsp, err := c.DeleteCluster(ctx, region, clusterId, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -818,8 +853,8 @@ func (c *ClientWithResponses) DeleteClusterWithResponse(ctx context.Context, clu
 }
 
 // GetClusterWithResponse request returning *GetClusterResponse
-func (c *ClientWithResponses) GetClusterWithResponse(ctx context.Context, clusterId string, reqEditors ...RequestEditorFn) (*GetClusterResponse, error) {
-	rsp, err := c.GetCluster(ctx, clusterId, reqEditors...)
+func (c *ClientWithResponses) GetClusterWithResponse(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*GetClusterResponse, error) {
+	rsp, err := c.GetCluster(ctx, region, clusterId, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -885,7 +920,10 @@ func ParseListClustersResponse(rsp *http.Response) (*ListClustersResponse, error
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []Cluster
+		var dest struct {
+			Clusters []Cluster `json:"clusters"`
+			Warnings *[]string `json:"warnings,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -979,7 +1017,10 @@ func ParseListManagementClustersResponse(rsp *http.Response) (*ListManagementClu
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []ManagementCluster
+		var dest struct {
+			Clusters []ManagementCluster `json:"clusters"`
+			Warnings *[]string           `json:"warnings,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1067,11 +1108,11 @@ type ServerInterface interface {
 	// (POST /v1/clusters)
 	CreateCluster(ctx echo.Context) error
 	// Delete a cluster
-	// (DELETE /v1/clusters/{clusterId})
-	DeleteCluster(ctx echo.Context, clusterId string) error
+	// (DELETE /v1/clusters/{region}/{clusterId})
+	DeleteCluster(ctx echo.Context, region string, clusterId string) error
 	// Get a cluster
-	// (GET /v1/clusters/{clusterId})
-	GetCluster(ctx echo.Context, clusterId string) error
+	// (GET /v1/clusters/{region}/{clusterId})
+	GetCluster(ctx echo.Context, region string, clusterId string) error
 	// List all management clusters
 	// (GET /v1/management_clusters)
 	ListManagementClusters(ctx echo.Context) error
@@ -1120,6 +1161,14 @@ func (w *ServerInterfaceWrapper) CreateCluster(ctx echo.Context) error {
 // DeleteCluster converts echo context to params.
 func (w *ServerInterfaceWrapper) DeleteCluster(ctx echo.Context) error {
 	var err error
+	// ------------- Path parameter "region" -------------
+	var region string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "region", runtime.ParamLocationPath, ctx.Param("region"), &region)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter region: %s", err))
+	}
+
 	// ------------- Path parameter "clusterId" -------------
 	var clusterId string
 
@@ -1133,13 +1182,21 @@ func (w *ServerInterfaceWrapper) DeleteCluster(ctx echo.Context) error {
 	ctx.Set(BasicAuthScopes, []string{""})
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.DeleteCluster(ctx, clusterId)
+	err = w.Handler.DeleteCluster(ctx, region, clusterId)
 	return err
 }
 
 // GetCluster converts echo context to params.
 func (w *ServerInterfaceWrapper) GetCluster(ctx echo.Context) error {
 	var err error
+	// ------------- Path parameter "region" -------------
+	var region string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "region", runtime.ParamLocationPath, ctx.Param("region"), &region)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter region: %s", err))
+	}
+
 	// ------------- Path parameter "clusterId" -------------
 	var clusterId string
 
@@ -1153,7 +1210,7 @@ func (w *ServerInterfaceWrapper) GetCluster(ctx echo.Context) error {
 	ctx.Set(BasicAuthScopes, []string{""})
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetCluster(ctx, clusterId)
+	err = w.Handler.GetCluster(ctx, region, clusterId)
 	return err
 }
 
@@ -1253,8 +1310,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.GET(baseURL+"/v1/clusters", wrapper.ListClusters)
 	router.POST(baseURL+"/v1/clusters", wrapper.CreateCluster)
-	router.DELETE(baseURL+"/v1/clusters/:clusterId", wrapper.DeleteCluster)
-	router.GET(baseURL+"/v1/clusters/:clusterId", wrapper.GetCluster)
+	router.DELETE(baseURL+"/v1/clusters/:region/:clusterId", wrapper.DeleteCluster)
+	router.GET(baseURL+"/v1/clusters/:region/:clusterId", wrapper.GetCluster)
 	router.GET(baseURL+"/v1/management_clusters", wrapper.ListManagementClusters)
 	router.POST(baseURL+"/v1/management_clusters", wrapper.CreateManagementCluster)
 	router.DELETE(baseURL+"/v1/management_clusters/:managementClusterId", wrapper.DeleteManagementCluster)
@@ -1265,21 +1322,22 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9RWUY/iNhD+K5bbx4hk230pb7t30gm1W1Xq4x46mXgAXxPbtSe0Ecp/r2zjQIjDgbbH",
-	"tS/I2DOeme+b8Zc9LVWtlQSJls731JZbqJlfvqsai2DcklWVWtP5655+b2BN5/S7/OiWH3zyZ2YhOnXZ",
-	"nmqjNBgU4K8T3P1iq4HOqUUj5IZ2GbXIsPEGQ3MlKyHhxGWlVAVMOh+9ZRYSt3UZNfBnIwxwOn+NV0T7",
-	"ZRbt1eozlOjtz3aWXUZfmGQbqEHiCQJX1fJHs4JSybXYJI8lqyF5YGAjlPxyQf6C3jxZj4WyMQLb3x0n",
-	"IdkVs6J8anDb8+vhdLu0v2KLqF0qK2AGzNjab5+bu4BCrpUzLZVEVqJbhjrpL0qU5LlS6O7lYEsjNPo6",
-	"6ZMkT78tCCpSGmAI5OdmBUYCgiVlAN0SJQmHmknuVtqoneDATyw/yrpnqveafZQuS4GVS+GFVe1GWReM",
-	"ZnQHxob4D7NiVri0lAbJtKBz+uPsYVa4XmG49bDlu4c83ur+b8AX59qAuTIW3NUobOwS65mxWkkbcP+h",
-	"KCIwIL0v07oSpffOP9vAeBge31QItXe8NGPH+YpUMGNYG7gYguxyI2rdQ+N8HotHF2Fo+KuKNmStGskH",
-	"jeSn/rQrXpdutkP7uD/LjNqmrplpY0xWVYOgWtkEdO8887Ge0Ohg8Vnx9ibYrkJrOEloGuhGbD18nbBD",
-	"rA9Hh77nGTGAjZGWbFtu3E5ELrBVjNlayB2rBCdC6gaD1U9jqxiHVQYYbwn8LSzaq5ntNwbsBsoIIxL+",
-	"OubZZYNZyfeH1YJ3Ia8KEMb8v/f7R/41M6yGMG2vU+Us3lP35NC5n1Ma31Tah6TnPGcnnJ2/rstRDzxO",
-	"Ixnq4JNTFO2kwhvHKA12wIew04ZIvkEfAP9jKBb3nKQD1ndi5QPgKSWH3j8K0aerJGP0iXEf8Rh/2dwg",
-	"IwmxvaQoY/Or8I89+InxWkg6omN0npafiWQvKdEYnK+jSQkS7qtOEwkMGXwZ0zctWWO036heieg3Cdnb",
-	"umggc6napqc+39fn6F4lg6nmu/iUJxCaetUTGf37KpnI50uCmXC59pV+G7+9sqb7dkpk/18cFd/8vbgs",
-	"zN+M/aDgybHuun8CAAD//3AEV0gPEQAA",
+	"H4sIAAAAAAAC/+RWUY/jJhD+K4j20Yqddl+at7076RRdt6p0j7noRMwk4WoDBZyrFfm/V4DtxAFnHaW7",
+	"26ovkQMDM/N9HzNzxLkopeDAjcaLI9b5HkriPt8XlTag7KdUQoIyDNwGo/bX1BLwAmujGN/hJsF/VBvI",
+	"Bd+ynd3+UcEWL/AP6en+tL08/XSybBLMSQnRCxXsmODRLW2IqfRzftoMPnvjxl35Z8UUULxYeb+9l3XS",
+	"eRGbb5Ab62V4PsBB8ILx89A3QhRAuD0q90THsrqIob2is48F8WkAa4DEE+FkByVwcx9fwfbttNyIr6UR",
+	"8koxU3+2hPlgN0Sz/LEy+16NDlm7ivsr9sZIG8oGiAIVWrvlS3PrkPGtsKa54Ibkxn76PPGvguXoXSEc",
+	"5hR0rpg0Lk/8yNHj70tkBMoVEAPIUqI4GNAo96BrJDiiUBJO7ZdU4sAo0DPLL7zsmepPzb5wGyUzhQ3h",
+	"iRT1TmjrDCf4AEp7//NZNstsWEICJ5LhBf55Np9lVjbE7B1s6WGedrfa/ztwyVkZEJvGktocme5Uoh0z",
+	"WgquPe4/ZVkHDHB3lkhZsNydTr9pz7h/WaHEzl0zA+XUp2mzakkiSpHa/v9OFGd8N7wrUOHw1IX0+nAi",
+	"qgvotaggse1Jsbc/ZA/W69DwN9HZoK2oOB1IGC9Wx4EeV+smaeXs/qwTrKuyJKrufJKiGDiVQkdIe+80",
+	"1+Hl8wRt3gla30TYJDaGQBpVQRPoZP4ybodYt1vti6MJUmAqxTXa11TZlQ45z1YWsrXkB1IwihiXlfFW",
+	"v4RWnR9SKCC0RvAX00ZPZrZfGLDrKUMEcfh+irNJBq80PfrK2KTHdmlJGx9gAQZCIXxw6ychSKJICf7V",
+	"rcbyWn7AturhhSsVuCvruHeJLwlPzsgLCvyYm7bIR131e9P9rAPRPYxT5/Gio8+2s+PC3Phu4+x6HhA5",
+	"V2C03H4E8z9lK3vNEtFy+krsfwRzTn37qE+9/eukLhxMbW/dj8Mx8l/UmSOT07UmHZpPYr6L7SuhJeM4",
+	"EEKwH+/oI8Fea+4h+C/T5iMkv27DHwlgyOBTSN/4FBCifedAEPF+02xwn4oGk0Mst/F6kx7LS3QnDRQx",
+	"8V1tVhGExvpWJKJ/fg6IxPPcSBA5MrU/3MdvPzvEdTs2Rvy3OMrevF5cHwnejH0/O0SfddP8HQAA//8C",
+	"zrAqihMAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -10,16 +10,14 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/nrz-incubator/malygos/pkg/api"
-	"github.com/nrz-incubator/malygos/pkg/malygos/clustermanager"
-	"github.com/nrz-incubator/malygos/pkg/malygos/managementclustermanager"
+	"github.com/nrz-incubator/malygos/pkg/malygos/manager"
 	"go.uber.org/zap"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 type Malygos struct {
 	httpPort   int
 	kubeconfig string
+	manager    manager.Manager
 }
 
 func New() *Malygos {
@@ -48,22 +46,12 @@ func (m *Malygos) Run() error {
 	p := prometheus.NewPrometheus("echo", nil)
 	p.Use(e)
 
-	config, err := clientcmd.BuildConfigFromFlags("", m.kubeconfig)
+	m.manager, err = manager.NewMalygosManager(logger, m.kubeconfig)
 	if err != nil {
-		logger.Error(err, "failed to build k8s config")
 		return err
 	}
 
-	client, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		logger.Error(err, "failed to create k8s client")
-		return err
-	}
-
-	inKubeClusterManager := managementclustermanager.NewInKubeClusterManager(logger, client)
-	kamajiClusterManager := clustermanager.NewKamajiClusterManager(logger, client)
-
-	myAPI := api.NewApiImpl(logger, kamajiClusterManager, inKubeClusterManager)
+	myAPI := api.NewApiImpl(logger, m.manager)
 	api.RegisterHandlers(e, myAPI)
 
 	// TODO: CORS

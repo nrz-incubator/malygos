@@ -2,24 +2,20 @@ package api
 
 import (
 	"github.com/go-logr/logr"
-	"github.com/nrz-incubator/malygos/pkg/malygos/clustermanager"
-	"github.com/nrz-incubator/malygos/pkg/malygos/managementclustermanager"
+	"github.com/nrz-incubator/malygos/pkg/malygos/manager"
 	"github.com/nrz-incubator/malygos/pkg/malygos/rbac"
 )
 
 type ApiImpl struct {
-	logger                   logr.Logger
-	clusterManager           clustermanager.ClusterManager
-	managementClusterManager managementclustermanager.ManagementClusterManager
-	rbac                     rbac.RBAC
+	logger  logr.Logger
+	manager manager.Manager
+	rbac    rbac.RBAC
 }
 
 func NewApiImpl(logger logr.Logger,
-	clusterManager clustermanager.ClusterManager,
-	managementClusterManager managementclustermanager.ManagementClusterManager) *ApiImpl {
+	manager manager.Manager) *ApiImpl {
 	return &ApiImpl{
-		logger:                   logger,
-		clusterManager:           clusterManager,
-		managementClusterManager: managementClusterManager,
+		logger:  logger,
+		manager: manager,
 	}
 }

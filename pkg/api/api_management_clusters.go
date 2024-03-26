@@ -12,7 +12,8 @@ func (api *ApiImpl) CreateManagementCluster(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	_, err := api.managementClusterManager.Create(nil)
+	// TODO
+	_, err := api.manager.GetManagementClusterManager().Create(nil)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
@@ -25,15 +26,23 @@ func (api *ApiImpl) ListManagementClusters(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	clusters, err := api.managementClusterManager.List()
+	clusters, err := api.manager.GetManagementClusterManager().List()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	clusterResp := []ManagementCluster{}
+	resp := ListManagementClustersResponse{
+		JSON200: &struct {
+			Clusters []ManagementCluster "json:\"clusters\""
+			Warnings *[]string           "json:\"warnings,omitempty\""
+		}{
+			Clusters: []ManagementCluster{},
+			Warnings: nil,
+		},
+	}
 
 	for _, cluster := range clusters {
-		clusterResp = append(clusterResp, ManagementCluster{
+		resp.JSON200.Clusters = append(resp.JSON200.Clusters, ManagementCluster{
 			Id:         &cluster.ID,
 			Name:       cluster.Name,
 			Kubeconfig: &cluster.Kubeconfig,
@@ -41,9 +50,7 @@ func (api *ApiImpl) ListManagementClusters(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, ListManagementClustersResponse{
-		JSON200: &clusterResp,
-	})
+	return c.JSON(http.StatusOK, resp)
 }
 
 func (api *ApiImpl) GetManagementCluster(c echo.Context, id string) error {
@@ -51,7 +58,7 @@ func (api *ApiImpl) GetManagementCluster(c echo.Context, id string) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	_, err := api.managementClusterManager.Get(id)
+	_, err := api.manager.GetManagementClusterManager().Get(id)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return c.JSON(http.StatusNotFound, nil)
@@ -59,6 +66,8 @@ func (api *ApiImpl) GetManagementCluster(c echo.Context, id string) error {
 
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
+
+	// TODO
 	return c.JSON(http.StatusOK, nil)
 }
 
@@ -67,7 +76,7 @@ func (api *ApiImpl) DeleteManagementCluster(c echo.Context, id string) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	if err := api.managementClusterManager.Delete(id); err != nil {
+	if err := api.manager.GetManagementClusterManager().Delete(id); err != nil {
 		if errors.IsNotFound(err) {
 			return c.JSON(http.StatusNotFound, nil)
 		}

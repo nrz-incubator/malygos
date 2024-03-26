@@ -7,4 +7,9 @@ type ClusterManager interface {
 	Get(id string) (*Cluster, error)
 }
 
-type Cluster struct{}
+type Cluster struct {
+	ID         string
+	Name       string
+	Kubeconfig string
+	Region     string
+}

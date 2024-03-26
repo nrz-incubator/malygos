@@ -9,6 +9,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -24,17 +25,22 @@ type InKubeClusterManager struct {
 	logger       logr.Logger
 }
 
-func NewInKubeClusterManager(logger logr.Logger, client *kubernetes.Clientset) *InKubeClusterManager {
+func NewInKubeClusterManager(logger logr.Logger, config *rest.Config) (*InKubeClusterManager, error) {
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create k8s client: %v", err)
+	}
+
 	return &InKubeClusterManager{
 		logger: logger,
 		client: client,
-	}
+	}, nil
 }
 
 func (m *InKubeClusterManager) Create(cluster *ManagementCluster) (*ManagementCluster, error) {
-	mc, err := m.Get(cluster.ID)
+	mc, err := m.Get(cluster.Region)
 	if err != nil {
-		m.logger.Error(err, "failed to get management cluster", "id", cluster.ID)
+		return nil, fmt.Errorf("failed to get management cluster: %v", err)
 	}
 
 	if mc != nil {
@@ -61,13 +67,17 @@ func (m *InKubeClusterManager) Create(cluster *ManagementCluster) (*ManagementCl
 	return cluster, err
 }
 
-func (m *InKubeClusterManager) Delete(id string) error {
-	_, err := m.Get(id)
+func (m *InKubeClusterManager) Delete(region string) error {
+	cluster, err := m.Get(region)
 	if err != nil {
 		return err
 	}
 
-	err = m.client.CoreV1().Secrets(m.cfgNamespace).Delete(context.TODO(), id, metav1.DeleteOptions{})
+	if cluster == nil {
+		return fmt.Errorf("management cluster not found")
+	}
+
+	err = m.client.CoreV1().Secrets(m.cfgNamespace).Delete(context.TODO(), cluster.ID, metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -95,14 +105,19 @@ func (m *InKubeClusterManager) List() ([]*ManagementCluster, error) {
 	return clusters, nil
 }
 
-func (m *InKubeClusterManager) Get(id string) (*ManagementCluster, error) {
-	secret := &v1.Secret{}
-	secret, err := m.client.CoreV1().Secrets(m.cfgNamespace).Get(context.TODO(), id, metav1.GetOptions{})
+func (m *InKubeClusterManager) Get(region string) (*ManagementCluster, error) {
+	clusters, err := m.List()
 	if err != nil {
 		return nil, err
 	}
 
-	return decodeSecret(secret)
+	for _, cluster := range clusters {
+		if cluster.Region == region {
+			return cluster, nil
+		}
+	}
+
+	return nil, nil
 }
 
 func decodeSecret(secret *v1.Secret) (*ManagementCluster, error) {

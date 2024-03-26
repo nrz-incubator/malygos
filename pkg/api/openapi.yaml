@@ -46,12 +46,21 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Cluster"
+                type: object
+                properties:
+                  clusters:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Cluster"
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - clusters
         "404":
           description: No cluster found
-  /v1/clusters/{clusterId}:
+  /v1/clusters/{region}/{clusterId}:
     get:
       summary: Get a cluster
       operationId: getCluster
@@ -63,6 +72,12 @@ paths:
           in: path
           required: true
           description: Cluster ID
+          schema:
+            type: string
+        - name: region
+          in: path
+          required: true
+          description: Cluster region
           schema:
             type: string
       responses:
@@ -87,6 +102,12 @@ paths:
           description: Cluster ID
           schema:
             type: string
+        - name: region
+          in: path
+          required: true
+          description: Cluster region
+          schema:
+            type: string
       responses:
         "204":
           description: Cluster deleted
@@ -105,9 +126,18 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ManagementCluster"
+                type: object
+                properties:
+                  clusters:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ManagementCluster"
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - clusters
         "404":
           description: No management cluster found
     post:
@@ -186,33 +216,32 @@ components:
   schemas:
     Kubeconfig:
       type: string
-    BaseCluster:
+    ClusterStatus:
+      type: object
+      properties:
+        online:
+          type: boolean
+        phase:
+          type: string
+      required:
+        - online
+        - phase
+    Cluster:
       type: object
       properties:
         name:
           type: string
         region:
           type: string
+        id:
+          type: string
+        kubeconfig:
+          $ref: "#/components/schemas/Kubeconfig"
+        status:
+          $ref: "#/components/schemas/ClusterStatus"
       required:
         - name
         - region
-    Cluster:
-      allof:
-        - $ref: "#/components/schemas/BaseCluster"
-        - type: object
-          properties:
-            id:
-              type: string
-            status:
-              type: object
-              properties:
-                online:
-                  type: boolean
-                phase:
-                  type: string
-              required:
-                - online
-                - phase
     ManagementCluster:
       type: object
       properties:
