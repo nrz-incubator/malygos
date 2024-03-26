@@ -13,7 +13,7 @@ func (api *ApiImpl) CreateManagementCluster(c echo.Context) error {
 	}
 
 	// TODO
-	_, err := api.manager.GetManagementClusterManager().Create(nil)
+	_, err := api.manager.GetClusterRegistrar().Create(nil)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
@@ -26,7 +26,7 @@ func (api *ApiImpl) ListManagementClusters(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	clusters, err := api.manager.GetManagementClusterManager().List()
+	clusters, err := api.manager.GetClusterRegistrar().List()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
@@ -58,7 +58,7 @@ func (api *ApiImpl) GetManagementCluster(c echo.Context, id string) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	_, err := api.manager.GetManagementClusterManager().Get(id)
+	_, err := api.manager.GetClusterRegistrar().Get(id)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return c.JSON(http.StatusNotFound, nil)
@@ -76,7 +76,7 @@ func (api *ApiImpl) DeleteManagementCluster(c echo.Context, id string) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	if err := api.manager.GetManagementClusterManager().Delete(id); err != nil {
+	if err := api.manager.GetClusterRegistrar().Delete(id); err != nil {
 		if errors.IsNotFound(err) {
 			return c.JSON(http.StatusNotFound, nil)
 		}

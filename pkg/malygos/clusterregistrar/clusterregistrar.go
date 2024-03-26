@@ -1,4 +1,4 @@
-package managementclustermanager
+package clusterregistrar
 
 import (
 	"fmt"
@@ -8,14 +8,14 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-type ManagementClusterManager interface {
-	Create(cluster *ManagementCluster) (*ManagementCluster, error)
+type ClusterRegistrarManager interface {
+	Create(cluster *ClusterRegistrar) (*ClusterRegistrar, error)
 	Delete(region string) error
-	List() ([]*ManagementCluster, error)
-	Get(region string) (*ManagementCluster, error)
+	List() ([]*ClusterRegistrar, error)
+	Get(region string) (*ClusterRegistrar, error)
 }
 
-type ManagementCluster struct {
+type ClusterRegistrar struct {
 	ID         string
 	Name       string
 	Region     string
@@ -23,7 +23,7 @@ type ManagementCluster struct {
 	Kubeconfig string
 }
 
-func (m *ManagementCluster) buildConfig() error {
+func (m *ClusterRegistrar) buildConfig() error {
 	config, err := clientcmd.BuildConfigFromFlags("", m.Kubeconfig)
 	if err != nil {
 		return fmt.Errorf("failed to build k8s config: %v", err)
@@ -33,7 +33,7 @@ func (m *ManagementCluster) buildConfig() error {
 	return nil
 }
 
-func (m *ManagementCluster) CreateClient() (*kubernetes.Clientset, error) {
+func (m *ClusterRegistrar) CreateClient() (*kubernetes.Clientset, error) {
 	if m.restConfig == nil {
 		if err := m.buildConfig(); err != nil {
 			return nil, err

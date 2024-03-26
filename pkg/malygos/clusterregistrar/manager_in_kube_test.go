@@ -1,4 +1,4 @@
-package managementclustermanager
+package clusterregistrar
 
 import (
 	"testing"

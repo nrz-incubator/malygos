@@ -5,14 +5,14 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/nrz-incubator/malygos/pkg/malygos/clustermanager"
-	"github.com/nrz-incubator/malygos/pkg/malygos/managementclustermanager"
+	"github.com/nrz-incubator/malygos/pkg/malygos/clusterregistrar"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 type MalygosManager struct {
 	kubeConfig     *rest.Config
-	clusterManager managementclustermanager.ManagementClusterManager
+	clusterManager clusterregistrar.ClusterRegistrarManager
 	logger         logr.Logger
 }
 
@@ -22,7 +22,7 @@ func NewMalygosManager(logger logr.Logger, kubeconfig string) (*MalygosManager, 
 		return nil, fmt.Errorf("failed to build k8s config: %v", err)
 	}
 
-	clusterManager, err := managementclustermanager.NewInKubeClusterManager(logger, config)
+	clusterManager, err := clusterregistrar.NewInKubeClusterManager(logger, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cluster manager: %v", err)
 	}
@@ -38,7 +38,7 @@ func (m *MalygosManager) GetKubeconfig() *rest.Config {
 	return m.kubeConfig
 }
 
-func (m *MalygosManager) GetManagementClusterManager() managementclustermanager.ManagementClusterManager {
+func (m *MalygosManager) GetClusterRegistrar() clusterregistrar.ClusterRegistrarManager {
 	return m.clusterManager
 }
 

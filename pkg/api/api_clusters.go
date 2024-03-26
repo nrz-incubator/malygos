@@ -134,7 +134,7 @@ func (api *ApiImpl) ListClusters(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	mgmtClusters, err := api.manager.GetManagementClusterManager().List()
+	mgmtClusters, err := api.manager.GetClusterRegistrar().List()
 	if err != nil {
 		api.logger.Error(err, "failed to list management clusters")
 		return c.JSON(http.StatusInternalServerError, nil)

@@ -1,4 +1,4 @@
-package managementclustermanager
+package clusterregistrar
 
 import (
 	"context"
@@ -37,7 +37,7 @@ func NewInKubeClusterManager(logger logr.Logger, config *rest.Config) (*InKubeCl
 	}, nil
 }
 
-func (m *InKubeClusterManager) Create(cluster *ManagementCluster) (*ManagementCluster, error) {
+func (m *InKubeClusterManager) Create(cluster *ClusterRegistrar) (*ClusterRegistrar, error) {
 	mc, err := m.Get(cluster.Region)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get management cluster: %v", err)
@@ -85,13 +85,13 @@ func (m *InKubeClusterManager) Delete(region string) error {
 	return nil
 }
 
-func (m *InKubeClusterManager) List() ([]*ManagementCluster, error) {
+func (m *InKubeClusterManager) List() ([]*ClusterRegistrar, error) {
 	secrets, err := m.client.CoreV1().Secrets(m.cfgNamespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	clusters := make([]*ManagementCluster, 0)
+	clusters := make([]*ClusterRegistrar, 0)
 
 	for _, secret := range secrets.Items {
 		mc, err := decodeSecret(&secret)
@@ -105,7 +105,7 @@ func (m *InKubeClusterManager) List() ([]*ManagementCluster, error) {
 	return clusters, nil
 }
 
-func (m *InKubeClusterManager) Get(region string) (*ManagementCluster, error) {
+func (m *InKubeClusterManager) Get(region string) (*ClusterRegistrar, error) {
 	clusters, err := m.List()
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func (m *InKubeClusterManager) Get(region string) (*ManagementCluster, error) {
 	return nil, nil
 }
 
-func decodeSecret(secret *v1.Secret) (*ManagementCluster, error) {
+func decodeSecret(secret *v1.Secret) (*ClusterRegistrar, error) {
 	if secret.Type != managementClusterSecretType {
 		return nil, fmt.Errorf("secret type is not %s", managementClusterSecretType)
 	}
@@ -137,7 +137,7 @@ func decodeSecret(secret *v1.Secret) (*ManagementCluster, error) {
 		return nil, fmt.Errorf("name label not found in secret")
 	}
 
-	return &ManagementCluster{
+	return &ClusterRegistrar{
 		ID:         string(secret.Name),
 		Name:       string(secret.Labels["name"]),
 		Kubeconfig: string(secret.Data["kubeconfig"]),
