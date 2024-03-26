@@ -4,15 +4,17 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"github.com/nrz-incubator/malygos/pkg/api"
 	"github.com/nrz-incubator/malygos/pkg/malygos/clustermanager"
 	"github.com/nrz-incubator/malygos/pkg/malygos/clusterregistrar"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 type MalygosManager struct {
 	kubeConfig     *rest.Config
-	clusterManager clusterregistrar.ClusterRegistrarManager
+	clusterManager api.ClusterRegistrarManager
 	logger         logr.Logger
 }
 
@@ -38,11 +40,11 @@ func (m *MalygosManager) GetKubeconfig() *rest.Config {
 	return m.kubeConfig
 }
 
-func (m *MalygosManager) GetClusterRegistrar() clusterregistrar.ClusterRegistrarManager {
+func (m *MalygosManager) GetClusterRegistrar() api.ClusterRegistrarManager {
 	return m.clusterManager
 }
 
-func (m *MalygosManager) GetClusterManager(region string) (clustermanager.ClusterManager, error) {
+func (m *MalygosManager) GetClusterManager(region string) (api.ClusterManager, error) {
 	mgmtCluster, err := m.clusterManager.Get(region)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get management cluster for region %s: %v", region, err)
@@ -53,5 +55,9 @@ func (m *MalygosManager) GetClusterManager(region string) (clustermanager.Cluste
 		return nil, fmt.Errorf("failed to create k8s client for management cluster: %v", err)
 	}
 
-	return clustermanager.NewKamajiClusterManager(m.logger, mgmtClusterClient), nil
+	return m.InstanciateClusterManager(m.logger, mgmtClusterClient), nil
+}
+
+func (m *MalygosManager) InstanciateClusterManager(logger logr.Logger, clientset *kubernetes.Clientset) api.ClusterManager {
+	return clustermanager.NewKamajiClusterManager(logger, clientset)
 }

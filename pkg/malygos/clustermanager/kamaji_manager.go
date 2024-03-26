@@ -6,6 +6,7 @@ import (
 
 	kamaji "github.com/clastix/kamaji/api/v1alpha1"
 	"github.com/go-logr/logr"
+	"github.com/nrz-incubator/malygos/pkg/api"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -29,10 +30,10 @@ func NewKamajiClusterManager(logger logr.Logger, client *kubernetes.Clientset) *
 	}
 }
 
-func (m *KamajiClusterManager) Create(cluster *Cluster) (*Cluster, error) {
+func (m *KamajiClusterManager) Create(cluster *api.Cluster) (*api.Cluster, error) {
 	kamajiCluster := &kamaji.TenantControlPlane{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: cluster.ID,
+			Name: *cluster.Id,
 			Labels: map[string]string{
 				regionalClusterLabel: cluster.Region,
 			},
@@ -52,7 +53,7 @@ func (m *KamajiClusterManager) Create(cluster *Cluster) (*Cluster, error) {
 				Service: kamaji.ServiceSpec{
 					AdditionalMetadata: kamaji.AdditionalMetadata{
 						Labels: map[string]string{
-							clusterIDLabel:       cluster.ID,
+							clusterIDLabel:       *cluster.Id,
 							regionalClusterLabel: cluster.Region,
 						},
 					},
@@ -76,6 +77,11 @@ func (m *KamajiClusterManager) Create(cluster *Cluster) (*Cluster, error) {
 		return nil, fmt.Errorf("failed to create kamaji cluster: %v", err)
 	}
 
+	cluster.Status = &api.ClusterStatus{
+		Phase:  "Pending",
+		Online: false,
+	}
+
 	return cluster, nil
 }
 
@@ -87,10 +93,10 @@ func (m *KamajiClusterManager) Delete(id string) error {
 	return nil
 }
 
-func (m *KamajiClusterManager) List() ([]*Cluster, error) {
+func (m *KamajiClusterManager) List() ([]*api.Cluster, error) {
 	return nil, nil
 }
 
-func (m *KamajiClusterManager) Get(id string) (*Cluster, error) {
+func (m *KamajiClusterManager) Get(id string) (*api.Cluster, error) {
 	return nil, nil
 }

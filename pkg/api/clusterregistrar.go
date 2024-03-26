@@ -1,4 +1,4 @@
-package clusterregistrar
+package api
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ type ClusterRegistrarManager interface {
 }
 
 type ClusterRegistrar struct {
-	ID         string
+	Id         string
 	Name       string
 	Region     string
 	restConfig *rest.Config

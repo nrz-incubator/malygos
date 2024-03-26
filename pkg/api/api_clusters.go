@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/nrz-incubator/malygos/pkg/malygos/clustermanager"
 )
 
 func (api *ApiImpl) CreateCluster(c echo.Context) error {
@@ -48,12 +47,7 @@ func (api *ApiImpl) CreateCluster(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	newCluster, err := clusterManager.Create(&clustermanager.Cluster{
-		Name:       cluster.Name,
-		Region:     cluster.Region,
-		Kubeconfig: *cluster.Kubeconfig,
-	})
-
+	cluster, err = clusterManager.Create(cluster)
 	if err != nil {
 		logger.Error(err, "failed to create cluster")
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -61,16 +55,7 @@ func (api *ApiImpl) CreateCluster(c echo.Context) error {
 
 	logger.WithValues("region", cluster.Region, "name", cluster.Name).Info("cluster created")
 	return c.JSON(http.StatusCreated, CreateClusterResponse{
-		JSON201: &Cluster{
-			Id:         &newCluster.ID,
-			Name:       newCluster.Name,
-			Kubeconfig: &newCluster.Kubeconfig,
-			Region:     newCluster.Region,
-			Status: &ClusterStatus{
-				Phase:  "Pending",
-				Online: false,
-			},
-		},
+		JSON201: cluster,
 	})
 }
 
@@ -117,16 +102,7 @@ func (api *ApiImpl) GetCluster(c echo.Context, region string, id string) error {
 		return c.JSON(http.StatusNotFound, nil)
 	}
 
-	resp := GetClusterResponse{
-		JSON200: &Cluster{
-			Id:         &cluster.ID,
-			Name:       cluster.Name,
-			Kubeconfig: &cluster.Kubeconfig,
-			Region:     cluster.Region,
-		},
-	}
-
-	return c.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusAccepted, DeleteClusterResponse{})
 }
 
 func (api *ApiImpl) ListClusters(c echo.Context) error {
@@ -156,8 +132,7 @@ func (api *ApiImpl) ListClusters(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
 
-		// TODO, find a way to create this in a modular way
-		clusterManager := clustermanager.NewKamajiClusterManager(api.logger, kubeClient)
+		clusterManager := api.manager.InstanciateClusterManager(api.logger, kubeClient)
 		clusters, err := clusterManager.List()
 		if err != nil {
 			api.logger.Error(err, "failed to list clusters")
@@ -165,12 +140,7 @@ func (api *ApiImpl) ListClusters(c echo.Context) error {
 		}
 
 		for _, cluster := range clusters {
-			resp.JSON200.Clusters = append(resp.JSON200.Clusters, Cluster{
-				Id:         &cluster.ID,
-				Name:       cluster.Name,
-				Kubeconfig: &cluster.Kubeconfig,
-				Region:     cluster.Region,
-			})
+			resp.JSON200.Clusters = append(resp.JSON200.Clusters, *cluster)
 		}
 
 	}

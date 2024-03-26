@@ -17,7 +17,7 @@ import (
 type Malygos struct {
 	httpPort   int
 	kubeconfig string
-	manager    manager.Manager
+	manager    api.Manager
 }
 
 func New() *Malygos {
