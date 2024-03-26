@@ -113,10 +113,10 @@ paths:
           description: Cluster deleted
         "404":
           description: Cluster not found
-  /v1/management_clusters:
+  /v1/registrars:
     get:
       summary: List all management clusters
-      operationId: listManagementClusters
+      operationId: listRegistrarClusters
       security:
         - bearerAuth: [cluster_admin]
         - basicAuth: [cluster_admin]
@@ -131,7 +131,7 @@ paths:
                   clusters:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ManagementCluster"
+                      $ref: "#/components/schemas/RegistrarCluster"
                   warnings:
                     type: array
                     items:
@@ -142,7 +142,7 @@ paths:
           description: No management cluster found
     post:
       summary: Create a new management cluster
-      operationId: createManagementCluster
+      operationId: createRegistrarCluster
       security:
         - bearerAuth: [cluster_admin]
         - basicAuth: [cluster_admin]
@@ -151,28 +151,28 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ManagementCluster"
+              $ref: "#/components/schemas/RegistrarCluster"
       responses:
         "201":
           description: Management cluster created, returns hydrated management cluster
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ManagementCluster"
+                $ref: "#/components/schemas/RegistrarCluster"
         "400":
           description: Invalid input
         "409":
           description: Management cluster already exists
 
-  /v1/management_clusters/{managementClusterId}:
+  /v1/registrars/{clusterRegistrarId}:
     get:
       summary: Get a management cluster
-      operationId: getManagementCluster
+      operationId: getRegistrarCluster
       security:
         - bearerAuth: [cluster_admin]
         - basicAuth: [cluster_admin]
       parameters:
-        - name: managementClusterId
+        - name: clusterRegistrarId
           in: path
           required: true
           description: Management cluster ID
@@ -184,17 +184,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ManagementCluster"
+                $ref: "#/components/schemas/RegistrarCluster"
         "404":
           description: Management cluster not found
     delete:
       summary: Delete a management cluster
-      operationId: deleteManagementCluster
+      operationId: deleteRegistrarCluster
       security:
         - bearerAuth: [cluster_admin]
         - basicAuth: [cluster_admin]
       parameters:
-        - name: managementClusterId
+        - name: clusterRegistrarId
           in: path
           required: true
           description: Management cluster ID
@@ -242,7 +242,7 @@ components:
       required:
         - name
         - region
-    ManagementCluster:
+    RegistrarCluster:
       type: object
       properties:
         id:

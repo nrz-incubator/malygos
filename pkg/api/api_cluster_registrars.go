@@ -7,7 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
-func (api *ApiImpl) CreateManagementCluster(c echo.Context) error {
+func (api *ApiImpl) CreateRegistrarCluster(c echo.Context) error {
 	if !api.rbac.IsAllowed("TODO username", "create", "managementcluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
@@ -21,7 +21,7 @@ func (api *ApiImpl) CreateManagementCluster(c echo.Context) error {
 	return c.JSON(http.StatusCreated, nil)
 }
 
-func (api *ApiImpl) ListManagementClusters(c echo.Context) error {
+func (api *ApiImpl) ListRegistrarClusters(c echo.Context) error {
 	if !api.rbac.IsAllowed("TODO username", "list", "managementcluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
@@ -31,18 +31,18 @@ func (api *ApiImpl) ListManagementClusters(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	resp := ListManagementClustersResponse{
+	resp := ListRegistrarClustersResponse{
 		JSON200: &struct {
-			Clusters []ManagementCluster "json:\"clusters\""
-			Warnings *[]string           "json:\"warnings,omitempty\""
+			Clusters []RegistrarCluster "json:\"clusters\""
+			Warnings *[]string          "json:\"warnings,omitempty\""
 		}{
-			Clusters: []ManagementCluster{},
+			Clusters: []RegistrarCluster{},
 			Warnings: nil,
 		},
 	}
 
 	for _, cluster := range clusters {
-		resp.JSON200.Clusters = append(resp.JSON200.Clusters, ManagementCluster{
+		resp.JSON200.Clusters = append(resp.JSON200.Clusters, RegistrarCluster{
 			Id:         &cluster.ID,
 			Name:       cluster.Name,
 			Kubeconfig: &cluster.Kubeconfig,
@@ -53,7 +53,7 @@ func (api *ApiImpl) ListManagementClusters(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func (api *ApiImpl) GetManagementCluster(c echo.Context, id string) error {
+func (api *ApiImpl) GetRegistrarCluster(c echo.Context, id string) error {
 	if !api.rbac.IsAllowed("TODO username", "get", "managementcluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
@@ -71,7 +71,7 @@ func (api *ApiImpl) GetManagementCluster(c echo.Context, id string) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
-func (api *ApiImpl) DeleteManagementCluster(c echo.Context, id string) error {
+func (api *ApiImpl) DeleteRegistrarCluster(c echo.Context, id string) error {
 	if !api.rbac.IsAllowed("TODO username", "delete", "managementcluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
