@@ -32,6 +32,8 @@ paths:
                 $ref: "#/components/schemas/Cluster"
         "400":
           description: Invalid input
+          schema:
+            $ref: "#/components/schemas/Error"
         "409":
           description: Cluster already exists
     get:
@@ -161,6 +163,10 @@ paths:
                 $ref: "#/components/schemas/RegistrarCluster"
         "400":
           description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "409":
           description: Management cluster already exists
 
@@ -214,6 +220,13 @@ components:
       type: http
       scheme: basic
   schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
     Kubeconfig:
       type: string
     ClusterStatus:

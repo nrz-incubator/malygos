@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/nrz-incubator/malygos/pkg/api"
+	"github.com/nrz-incubator/malygos/pkg/errors"
 	"github.com/nrz-incubator/malygos/pkg/util"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,7 +47,7 @@ func (m *InKubeClusterManager) Create(cluster *api.ClusterRegistrar) (*api.Clust
 	}
 
 	if mc != nil {
-		return nil, fmt.Errorf("management cluster already exists")
+		return nil, errors.NewConflictError("region", cluster.Region)
 	}
 
 	secretName := generateSecretName()
@@ -76,7 +77,7 @@ func (m *InKubeClusterManager) Delete(region string) error {
 	}
 
 	if cluster == nil {
-		return fmt.Errorf("management cluster not found")
+		return errors.NewNotFoundError("region", region)
 	}
 
 	err = m.client.CoreV1().Secrets(m.cfgNamespace).Delete(context.TODO(), cluster.Id, metav1.DeleteOptions{})
@@ -133,19 +134,19 @@ func decodeSecret(secret *v1.Secret) (*api.ClusterRegistrar, error) {
 		return nil, fmt.Errorf("kubeconfig not found in secret")
 	}
 
-	if _, ok := secret.Labels["region"]; !ok {
-		return nil, fmt.Errorf("region label not found in secret")
+	if _, ok := secret.Labels[managementClusterLabelRegion]; !ok {
+		return nil, fmt.Errorf("%s label not found in secret", managementClusterLabelRegion)
 	}
 
-	if _, ok := secret.Labels["name"]; !ok {
-		return nil, fmt.Errorf("name label not found in secret")
+	if _, ok := secret.Labels[managementClusterLabelName]; !ok {
+		return nil, fmt.Errorf("%s label not found in secret", managementClusterLabelName)
 	}
 
 	return &api.ClusterRegistrar{
 		Id:         string(secret.Name),
-		Name:       string(secret.Labels["name"]),
+		Name:       string(secret.Labels[managementClusterLabelName]),
 		Kubeconfig: string(secret.Data["kubeconfig"]),
-		Region:     string(secret.Labels["region"]),
+		Region:     string(secret.Labels[managementClusterLabelRegion]),
 	}, nil
 }
 

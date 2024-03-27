@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/nrz-incubator/malygos/pkg/errors"
 )
 
 func (api *ApiImpl) CreateRegistrarCluster(c echo.Context) error {
@@ -18,7 +18,7 @@ func (api *ApiImpl) CreateRegistrarCluster(c echo.Context) error {
 
 	if c.Request().Body == nil {
 		logger.Error(fmt.Errorf("create cluster request error"), "request body is nil")
-		return c.JSON(http.StatusBadRequest, nil)
+		return c.JSON(http.StatusBadRequest, Error{Error: "request body is nil"})
 	}
 
 	req, err := io.ReadAll(c.Request().Body)
@@ -31,15 +31,23 @@ func (api *ApiImpl) CreateRegistrarCluster(c echo.Context) error {
 	cluster := &RegistrarCluster{}
 	if err := json.Unmarshal(req, cluster); err != nil {
 		logger.Error(err, "failed to unmarshal request body on create cluster")
-		return c.JSON(http.StatusBadRequest, nil)
+		return c.JSON(http.StatusBadRequest, Error{Error: "failed to unmarshal request body on create cluster"})
 	}
 
 	if cluster.Kubeconfig == nil {
-		return c.JSON(http.StatusBadRequest, fmt.Errorf("kubeconfig field is required"))
+		return c.JSON(http.StatusBadRequest, Error{Error: "kubeconfig field is required"})
+	}
+
+	if len(*cluster.Kubeconfig) == 0 {
+		return c.JSON(http.StatusBadRequest, Error{Error: "kubeconfig field must be non empty"})
 	}
 
 	if cluster.Name == "" {
-		return c.JSON(http.StatusBadRequest, fmt.Errorf("name field is required"))
+		return c.JSON(http.StatusBadRequest, Error{Error: "name field is required"})
+	}
+
+	if cluster.Region == "" {
+		return c.JSON(http.StatusBadRequest, Error{Error: "region field is required"})
 	}
 
 	regCluster, err := api.manager.GetClusterRegistrar().Create(&ClusterRegistrar{
@@ -48,6 +56,11 @@ func (api *ApiImpl) CreateRegistrarCluster(c echo.Context) error {
 		Kubeconfig: *cluster.Kubeconfig,
 	})
 	if err != nil {
+		if errors.IsConflict(err) {
+			return c.JSON(http.StatusConflict, Error{Error: err.Error()})
+		}
+
+		logger.Error(err, "failed to create cluster")
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
