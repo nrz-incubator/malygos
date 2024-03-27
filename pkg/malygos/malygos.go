@@ -20,9 +20,10 @@ type Malygos struct {
 		Port          int
 		EnableRecover bool
 	}
-	kubeconfig string
-	manager    api.Manager
-	logger     logr.Logger
+	kubeconfig          string
+	managementNamespace string
+	manager             api.Manager
+	logger              logr.Logger
 }
 
 func New() *Malygos {
@@ -59,7 +60,7 @@ func (m *Malygos) Run() error {
 	p := prometheus.NewPrometheus("echo", nil)
 	p.Use(e)
 
-	m.manager, err = manager.NewMalygosManager(m.logger, m.kubeconfig)
+	m.manager, err = manager.NewMalygosManager(m.logger, m.kubeconfig, m.managementNamespace)
 	if err != nil {
 		return err
 	}

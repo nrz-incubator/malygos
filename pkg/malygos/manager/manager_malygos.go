@@ -20,13 +20,13 @@ type MalygosManager struct {
 	rbac           rbac.RBAC
 }
 
-func NewMalygosManager(logger logr.Logger, kubeconfig string) (*MalygosManager, error) {
+func NewMalygosManager(logger logr.Logger, kubeconfig string, namespace string) (*MalygosManager, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build k8s config: %v", err)
 	}
 
-	clusterManager, err := clusterregistrar.NewInKubeClusterManager(logger, config)
+	clusterManager, err := clusterregistrar.NewInKubeClusterManager(logger, config, namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cluster manager: %v", err)
 	}

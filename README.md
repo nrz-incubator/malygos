@@ -3,6 +3,8 @@
 Malygos is a tool to orchestrate Kubernetes provisionners installed on multiple Kubernetes management
 clusters.
 
+Kubernetes management clusters are called registrars and are intended to be single per region.
+
 It permits to have decentralized Kubernetes cluster spawning, per region for example.
 
 Note: This is currently in heavy development and experimental, use it at your own risk.

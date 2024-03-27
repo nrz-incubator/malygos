@@ -26,15 +26,16 @@ type InKubeClusterManager struct {
 	logger       logr.Logger
 }
 
-func NewInKubeClusterManager(logger logr.Logger, config *rest.Config) (*InKubeClusterManager, error) {
+func NewInKubeClusterManager(logger logr.Logger, config *rest.Config, namespace string) (*InKubeClusterManager, error) {
 	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create k8s client: %v", err)
 	}
 
 	return &InKubeClusterManager{
-		logger: logger,
-		client: client,
+		logger:       logger,
+		client:       client,
+		cfgNamespace: namespace,
 	}, nil
 }
 
@@ -97,7 +98,9 @@ func (m *InKubeClusterManager) List() ([]*api.ClusterRegistrar, error) {
 	for _, secret := range secrets.Items {
 		mc, err := decodeSecret(&secret)
 		if err != nil {
-			m.logger.Error(err, "failed to decode secret", "secret", secret.Name)
+			if err, ok := err.(*secretTypeError); !ok {
+				m.logger.Error(err, "failed to decode secret", "secret", secret.Name)
+			}
 			continue
 		}
 
@@ -123,7 +126,7 @@ func (m *InKubeClusterManager) Get(region string) (*api.ClusterRegistrar, error)
 
 func decodeSecret(secret *v1.Secret) (*api.ClusterRegistrar, error) {
 	if secret.Type != managementClusterSecretType {
-		return nil, fmt.Errorf("secret type is not %s", managementClusterSecretType)
+		return nil, newSecretTypeError()
 	}
 
 	if _, ok := secret.Data["kubeconfig"]; !ok {
