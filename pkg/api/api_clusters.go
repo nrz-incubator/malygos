@@ -101,12 +101,12 @@ func (api *ApiImpl) GetCluster(c echo.Context, region string, id string) error {
 
 	cluster, err := clusterManager.Get(id)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, nil)
+		}
+
 		logger.Error(err, "failed to get cluster")
 		return c.JSON(http.StatusInternalServerError, nil)
-	}
-
-	if cluster == nil {
-		return c.JSON(http.StatusNotFound, nil)
 	}
 
 	return c.JSON(http.StatusOK, cluster)

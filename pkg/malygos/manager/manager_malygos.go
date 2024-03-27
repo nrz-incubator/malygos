@@ -20,6 +20,7 @@ type MalygosManager struct {
 	registrarManager api.ClusterRegistrarManager
 	logger           logr.Logger
 	rbac             api.RBAC
+	namespace        string
 }
 
 func NewMalygosManager(logger logr.Logger, kubeconfig string, namespace string) (*MalygosManager, error) {
@@ -38,6 +39,7 @@ func NewMalygosManager(logger logr.Logger, kubeconfig string, namespace string) 
 		registrarManager: registarManager,
 		logger:           logger,
 		rbac:             rbac.NewNoop(),
+		namespace:        namespace,
 	}, nil
 }
 
@@ -72,5 +74,5 @@ func (m *MalygosManager) GetClusterManager(region string) (api.ClusterManager, e
 }
 
 func (m *MalygosManager) InstanciateClusterManager(logger logr.Logger, _ *kubernetes.Clientset, client *dynamic.DynamicClient) api.ClusterManager {
-	return clustermanager.NewKamajiClusterManager(logger, client)
+	return clustermanager.NewKamajiClusterManager(logger, client, m.namespace)
 }

@@ -25,14 +25,16 @@ const (
 )
 
 type KamajiClusterManager struct {
-	client *dynamic.DynamicClient
-	logger logr.Logger
+	client    *dynamic.DynamicClient
+	logger    logr.Logger
+	namespace string
 }
 
-func NewKamajiClusterManager(logger logr.Logger, client *dynamic.DynamicClient) *KamajiClusterManager {
+func NewKamajiClusterManager(logger logr.Logger, client *dynamic.DynamicClient, namespace string) *KamajiClusterManager {
 	return &KamajiClusterManager{
-		client: client,
-		logger: logger,
+		client:    client,
+		logger:    logger,
+		namespace: namespace,
 	}
 }
 
@@ -66,7 +68,7 @@ func (m *KamajiClusterManager) Create(cluster *api.Cluster) (*api.Cluster, error
 					},
 				},
 				Service: kamaji.ServiceSpec{
-					ServiceType: "LoadBalancer",
+					ServiceType: "ClusterIP",
 					AdditionalMetadata: kamaji.AdditionalMetadata{
 						Labels: map[string]string{
 							clusterIDLabel:       clusterID,
@@ -100,7 +102,7 @@ func (m *KamajiClusterManager) Create(cluster *api.Cluster) (*api.Cluster, error
 	}
 
 	_, err = m.client.Resource(kamaji.GroupVersion.WithResource("tenantcontrolplanes")).
-		Namespace("default").
+		Namespace(m.namespace).
 		Create(context.TODO(), unstructuredObj, metav1.CreateOptions{})
 
 	if err != nil {
@@ -117,7 +119,9 @@ func (m *KamajiClusterManager) Create(cluster *api.Cluster) (*api.Cluster, error
 }
 
 func (m *KamajiClusterManager) Delete(id string) error {
-	err := m.client.Resource(kamaji.GroupVersion.WithResource("tenantcontrolplanes")).Namespace("default").Delete(context.TODO(), id, metav1.DeleteOptions{})
+	err := m.client.Resource(kamaji.GroupVersion.WithResource("tenantcontrolplanes")).
+		Namespace(m.namespace).
+		Delete(context.TODO(), id, metav1.DeleteOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to delete kamaji cluster: %v", err)
 	}
@@ -126,7 +130,7 @@ func (m *KamajiClusterManager) Delete(id string) error {
 
 func (m *KamajiClusterManager) List() ([]*api.Cluster, error) {
 	unstructuredList, err := m.client.Resource(kamaji.GroupVersion.WithResource("tenantcontrolplanes")).
-		Namespace("default").
+		Namespace(m.namespace).
 		List(context.TODO(), metav1.ListOptions{})
 
 	if err != nil {
@@ -160,6 +164,7 @@ func (m *KamajiClusterManager) List() ([]*api.Cluster, error) {
 
 		cluster := &api.Cluster{
 			Id:     ptr.To(kc.Name),
+			Name:   "", // TODO
 			Region: region,
 			Status: &api.ClusterStatus{
 				Phase:  status,
@@ -174,7 +179,7 @@ func (m *KamajiClusterManager) List() ([]*api.Cluster, error) {
 
 func (m *KamajiClusterManager) Get(id string) (*api.Cluster, error) {
 	unstructuredObj, err := m.client.Resource(kamaji.GroupVersion.WithResource("tenantcontrolplanes")).
-		Namespace("default").
+		Namespace(m.namespace).
 		Get(context.TODO(), id, metav1.GetOptions{})
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -208,6 +213,7 @@ func (m *KamajiClusterManager) Get(id string) (*api.Cluster, error) {
 
 	return &api.Cluster{
 		Id:     ptr.To(kamajiCluster.Name),
+		Name:   "", // TODO
 		Region: region,
 		Status: &api.ClusterStatus{
 			Phase:  status,
