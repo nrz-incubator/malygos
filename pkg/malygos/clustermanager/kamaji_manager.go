@@ -8,8 +8,10 @@ import (
 	kamaji "github.com/clastix/kamaji/api/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/nrz-incubator/malygos/pkg/api"
+	"github.com/nrz-incubator/malygos/pkg/errors"
 	"github.com/nrz-incubator/malygos/pkg/util"
 	v1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
@@ -123,9 +125,93 @@ func (m *KamajiClusterManager) Delete(id string) error {
 }
 
 func (m *KamajiClusterManager) List() ([]*api.Cluster, error) {
-	return nil, nil
+	unstructuredList, err := m.client.Resource(kamaji.GroupVersion.WithResource("tenantcontrolplanes")).
+		Namespace("default").
+		List(context.TODO(), metav1.ListOptions{})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to list kamaji clusters: %v", err)
+	}
+
+	b, err := json.Marshal(unstructuredList)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal kamaji cluster list: %v", err)
+	}
+
+	var kamajiClusters kamaji.TenantControlPlaneList
+	err = json.Unmarshal(b, &kamajiClusters)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal kamaji cluster list: %v", err)
+	}
+
+	clusters := make([]*api.Cluster, 0)
+	for _, kc := range kamajiClusters.Items {
+		status := "Pending"
+		if kc.Status.Kubernetes.Version.Status != nil {
+			status = string(*kc.Status.Kubernetes.Version.Status)
+		}
+
+		region := ""
+		if val, ok := kc.Labels[regionalClusterLabel]; ok {
+			region = val
+		} else {
+			region = "unknown"
+		}
+
+		cluster := &api.Cluster{
+			Id:     ptr.To(kc.Name),
+			Region: region,
+			Status: &api.ClusterStatus{
+				Phase:  status,
+				Online: status == "Ready",
+			},
+		}
+		clusters = append(clusters, cluster)
+	}
+
+	return clusters, nil
 }
 
 func (m *KamajiClusterManager) Get(id string) (*api.Cluster, error) {
-	return nil, nil
+	unstructuredObj, err := m.client.Resource(kamaji.GroupVersion.WithResource("tenantcontrolplanes")).
+		Namespace("default").
+		Get(context.TODO(), id, metav1.GetOptions{})
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			return nil, errors.NewNotFoundError("kamaji cluster", id)
+		}
+		return nil, fmt.Errorf("failed to get kamaji cluster: %v", err)
+	}
+
+	b, err := json.Marshal(unstructuredObj)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal kamaji cluster: %v", err)
+	}
+
+	var kamajiCluster kamaji.TenantControlPlane
+	err = json.Unmarshal(b, &kamajiCluster)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal kamaji cluster: %v", err)
+	}
+
+	region := ""
+	if val, ok := kamajiCluster.Labels[regionalClusterLabel]; ok {
+		region = val
+	} else {
+		region = "unknown"
+	}
+
+	status := "Pending"
+	if kamajiCluster.Status.Kubernetes.Version.Status != nil {
+		status = string(*kamajiCluster.Status.Kubernetes.Version.Status)
+	}
+
+	return &api.Cluster{
+		Id:     ptr.To(kamajiCluster.Name),
+		Region: region,
+		Status: &api.ClusterStatus{
+			Phase:  status,
+			Online: status == "Ready",
+		},
+	}, nil
 }

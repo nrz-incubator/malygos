@@ -109,7 +109,7 @@ func (api *ApiImpl) GetCluster(c echo.Context, region string, id string) error {
 		return c.JSON(http.StatusNotFound, nil)
 	}
 
-	return c.JSON(http.StatusAccepted, nil)
+	return c.JSON(http.StatusOK, cluster)
 }
 
 func (api *ApiImpl) ListClusters(c echo.Context) error {
