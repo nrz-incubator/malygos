@@ -11,5 +11,7 @@ func (m *Malygos) readConfiguration() error {
 		return fmt.Errorf("KUBECONFIG variable not set")
 	}
 
+	m.logger.WithValues("kubeconfig", m.kubeconfig).Info("configuration set")
+
 	return nil
 }

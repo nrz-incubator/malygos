@@ -12,7 +12,7 @@ import (
 
 func (api *ApiImpl) CreateRegistrarCluster(c echo.Context) error {
 	logger := api.logger
-	if !api.rbac.IsAllowed("TODO username", "create", "managementcluster") {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "create", "managementcluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
@@ -51,18 +51,16 @@ func (api *ApiImpl) CreateRegistrarCluster(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	return c.JSON(http.StatusCreated, CreateRegistrarClusterResponse{
-		JSON201: &RegistrarCluster{
-			Id:         &regCluster.Id,
-			Name:       regCluster.Name,
-			Kubeconfig: &regCluster.Kubeconfig,
-			Region:     regCluster.Region,
-		},
+	return c.JSON(http.StatusCreated, &RegistrarCluster{
+		Id:         &regCluster.Id,
+		Name:       regCluster.Name,
+		Kubeconfig: &regCluster.Kubeconfig,
+		Region:     regCluster.Region,
 	})
 }
 
 func (api *ApiImpl) ListRegistrarClusters(c echo.Context) error {
-	if !api.rbac.IsAllowed("TODO username", "list", "managementcluster") {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "list", "managementcluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
@@ -90,11 +88,11 @@ func (api *ApiImpl) ListRegistrarClusters(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusOK, resp.JSON200)
 }
 
 func (api *ApiImpl) GetRegistrarCluster(c echo.Context, region string) error {
-	if !api.rbac.IsAllowed("TODO username", "get", "managementcluster") {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "get", "managementcluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
@@ -107,18 +105,16 @@ func (api *ApiImpl) GetRegistrarCluster(c echo.Context, region string) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	return c.JSON(http.StatusOK, GetRegistrarClusterResponse{
-		JSON200: &RegistrarCluster{
-			Id:         &cluster.Id,
-			Name:       cluster.Name,
-			Kubeconfig: &cluster.Kubeconfig,
-			Region:     cluster.Region,
-		},
+	return c.JSON(http.StatusOK, &RegistrarCluster{
+		Id:         &cluster.Id,
+		Name:       cluster.Name,
+		Kubeconfig: &cluster.Kubeconfig,
+		Region:     cluster.Region,
 	})
 }
 
 func (api *ApiImpl) DeleteRegistrarCluster(c echo.Context, id string) error {
-	if !api.rbac.IsAllowed("TODO username", "delete", "managementcluster") {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "delete", "managementcluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 

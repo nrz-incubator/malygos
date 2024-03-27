@@ -12,7 +12,8 @@
 			"program": "${workspaceFolder}/cmd/malygos",
 			"env": {
 				"CGO_ENABLED": "0",
-			}
+			},
+			"envFile": "${workspaceFolder}/.env",
 		}
 	]
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
@@ -15,14 +16,24 @@ import (
 )
 
 type Malygos struct {
-	httpPort   int
+	http struct {
+		Port          int
+		EnableRecover bool
+	}
 	kubeconfig string
 	manager    api.Manager
+	logger     logr.Logger
 }
 
 func New() *Malygos {
 	return &Malygos{
-		httpPort: 8080,
+		http: struct {
+			Port          int
+			EnableRecover bool
+		}{
+			Port:          8080,
+			EnableRecover: true,
+		},
 	}
 }
 
@@ -32,26 +43,28 @@ func (m *Malygos) Run() error {
 		return err
 	}
 
-	logger := zapr.NewLogger(zapLog)
+	m.logger = zapr.NewLogger(zapLog)
 
 	if err := m.readConfiguration(); err != nil {
-		logger.Error(err, "failed to read configuration")
+		m.logger.Error(err, "failed to read configuration")
 		return err
 	}
 
 	e := echo.New()
 	e.Use(middleware.LoggerWithConfig(loggerConfig()))
-	e.Use(middleware.Recover())
+	if m.http.EnableRecover {
+		e.Use(middleware.Recover())
+	}
 
 	p := prometheus.NewPrometheus("echo", nil)
 	p.Use(e)
 
-	m.manager, err = manager.NewMalygosManager(logger, m.kubeconfig)
+	m.manager, err = manager.NewMalygosManager(m.logger, m.kubeconfig)
 	if err != nil {
 		return err
 	}
 
-	myAPI := api.NewApiImpl(logger, m.manager)
+	myAPI := api.NewApiImpl(m.logger, m.manager)
 	api.RegisterHandlers(e, myAPI)
 
 	// TODO: CORS
@@ -60,7 +73,7 @@ func (m *Malygos) Run() error {
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	}))
 
-	return e.Start(fmt.Sprintf(":%d", m.httpPort))
+	return e.Start(fmt.Sprintf(":%d", m.http.Port))
 }
 
 func loggerConfig() middleware.LoggerConfig {

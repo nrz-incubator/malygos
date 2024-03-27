@@ -11,7 +11,7 @@ import (
 
 func (api *ApiImpl) CreateCluster(c echo.Context) error {
 	logger := api.logger
-	if !api.rbac.IsAllowed("TODO username", "create", "cluster") {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "create", "cluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
@@ -54,14 +54,12 @@ func (api *ApiImpl) CreateCluster(c echo.Context) error {
 	}
 
 	logger.WithValues("region", cluster.Region, "name", cluster.Name).Info("cluster created")
-	return c.JSON(http.StatusCreated, CreateClusterResponse{
-		JSON201: cluster,
-	})
+	return c.JSON(http.StatusCreated, cluster)
 }
 
 func (api *ApiImpl) DeleteCluster(c echo.Context, region string, id string) error {
 	logger := api.logger.WithValues("region", region, "id", id)
-	if !api.rbac.IsAllowed("TODO username", "delete", "cluster") {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "delete", "cluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
@@ -82,7 +80,7 @@ func (api *ApiImpl) DeleteCluster(c echo.Context, region string, id string) erro
 
 func (api *ApiImpl) GetCluster(c echo.Context, region string, id string) error {
 	logger := api.logger.WithValues("region", region, "id", id)
-	if !api.rbac.IsAllowed("TODO username", "get", "cluster") {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "get", "cluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
@@ -102,11 +100,11 @@ func (api *ApiImpl) GetCluster(c echo.Context, region string, id string) error {
 		return c.JSON(http.StatusNotFound, nil)
 	}
 
-	return c.JSON(http.StatusAccepted, DeleteClusterResponse{})
+	return c.JSON(http.StatusAccepted, nil)
 }
 
 func (api *ApiImpl) ListClusters(c echo.Context) error {
-	if !api.rbac.IsAllowed("TODO username", "list", "cluster") {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "list", "cluster") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
@@ -145,5 +143,5 @@ func (api *ApiImpl) ListClusters(c echo.Context) error {
 
 	}
 
-	return c.JSON(200, resp)
+	return c.JSON(200, resp.JSON200)
 }

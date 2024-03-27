@@ -18,6 +18,8 @@ Note: This is currently in heavy development and experimental, use it at your ow
 ### Prerequisites
 
 * Go 1.21+
+* If you are using vscode, a `.env` file containing the following variables:
+  * `KUBECONFIG` pointing to your kubeconfig file
 
 ### Build (with direnv/nix)
 
