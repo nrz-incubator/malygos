@@ -54,7 +54,7 @@ func (m *Malygos) Run() error {
 	e := echo.New()
 	e.Use(middleware.LoggerWithConfig(loggerConfig()))
 	if m.http.EnableRecover {
-		e.Use(middleware.Recover())
+		//e.Use(middleware.Recover())
 	}
 
 	p := prometheus.NewPrometheus("echo", nil)

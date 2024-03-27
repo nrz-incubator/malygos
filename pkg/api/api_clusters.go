@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/nrz-incubator/malygos/pkg/errors"
 )
 
 func (api *ApiImpl) CreateCluster(c echo.Context) error {
@@ -33,16 +34,24 @@ func (api *ApiImpl) CreateCluster(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	if cluster.Kubeconfig == nil {
-		return c.JSON(http.StatusBadRequest, fmt.Errorf("kubeconfig field is required"))
+	if cluster.Id != nil {
+		return c.JSON(http.StatusBadRequest, Error{Error: "id field is not allowed"})
+	}
+
+	if cluster.Region == "" {
+		return c.JSON(http.StatusBadRequest, Error{Error: "region field is required"})
 	}
 
 	if cluster.Name == "" {
-		return c.JSON(http.StatusBadRequest, fmt.Errorf("name field is required"))
+		return c.JSON(http.StatusBadRequest, Error{Error: "name field is required"})
 	}
 
 	clusterManager, err := api.manager.GetClusterManager(cluster.Region)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, Error{Error: fmt.Errorf("region %s not found", cluster.Region).Error()})
+		}
+
 		logger.Error(err, "failed to get cluster manager")
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
@@ -108,7 +117,7 @@ func (api *ApiImpl) ListClusters(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	mgmtClusters, err := api.manager.GetClusterRegistrar().List()
+	registars, err := api.manager.GetClusterRegistrar().List()
 	if err != nil {
 		api.logger.Error(err, "failed to list management clusters")
 		return c.JSON(http.StatusInternalServerError, nil)
@@ -124,13 +133,18 @@ func (api *ApiImpl) ListClusters(c echo.Context) error {
 		},
 	}
 
-	for _, mgmtCluster := range mgmtClusters {
-		kubeClient, err := mgmtCluster.CreateClient()
+	for _, registrar := range registars {
+		kubeClient, err := registrar.CreateClient()
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
 
-		clusterManager := api.manager.InstanciateClusterManager(api.logger, kubeClient)
+		dynKubeClient, err := registrar.CreateDynamicClient()
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+
+		clusterManager := api.manager.InstanciateClusterManager(api.logger, kubeClient, dynKubeClient)
 		clusters, err := clusterManager.List()
 		if err != nil {
 			api.logger.Error(err, "failed to list clusters")
