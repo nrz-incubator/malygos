@@ -19,9 +19,9 @@ func Test_getIDFromSecretName(t *testing.T) {
 		{
 			name: "test",
 			args: args{
-				"pouet",
+				"malygos-mc-pouet",
 			},
-			want: "test",
+			want: "pouet",
 		},
 	}
 
