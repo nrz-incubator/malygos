@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/nrz-incubator/malygos/pkg/errors"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func (api *ApiImpl) CreateRegistrarCluster(c echo.Context) error {
@@ -48,6 +49,11 @@ func (api *ApiImpl) CreateRegistrarCluster(c echo.Context) error {
 
 	if cluster.Region == "" {
 		return c.JSON(http.StatusBadRequest, Error{Error: "region field is required"})
+	}
+
+	// validate kubeconfig
+	if _, err := clientcmd.NewClientConfigFromBytes([]byte(*cluster.Kubeconfig)); err != nil {
+		return c.JSON(http.StatusBadRequest, Error{Error: fmt.Errorf("kubeconfig is invalid: %v", err).Error()})
 	}
 
 	regCluster, err := api.manager.GetClusterRegistrar().Create(&ClusterRegistrar{
