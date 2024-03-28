@@ -76,3 +76,8 @@ func (m *MalygosManager) GetClusterManager(region string) (api.ClusterManager, e
 func (m *MalygosManager) InstanciateClusterManager(logger logr.Logger, _ *kubernetes.Clientset, client *dynamic.DynamicClient) api.ClusterManager {
 	return clustermanager.NewKamajiClusterManager(logger, client, m.namespace)
 }
+
+func (m *MalygosManager) GetCatalog() api.CatalogManager {
+	// TODO implement a sample for this
+	return nil
+}

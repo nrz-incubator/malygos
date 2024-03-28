@@ -27,6 +27,31 @@ const (
 	BearerAuthScopes = "bearerAuth.Scopes"
 )
 
+// Catalog defines model for Catalog.
+type Catalog struct {
+	Components []CatalogComponent `json:"components"`
+}
+
+// CatalogComponent defines model for CatalogComponent.
+type CatalogComponent struct {
+	Description      string    `json:"description"`
+	Icon             string    `json:"icon"`
+	LatestVersion    *string   `json:"latest_version,omitempty"`
+	Name             string    `json:"name"`
+	Published        *bool     `json:"published,omitempty"`
+	ShortDescription string    `json:"short_description"`
+	Url              string    `json:"url"`
+	Versions         *[]string `json:"versions,omitempty"`
+}
+
+// CatalogComponentVersion defines model for CatalogComponentVersion.
+type CatalogComponentVersion struct {
+	Description     string `json:"description"`
+	Enabled         *bool  `json:"enabled,omitempty"`
+	PublicationDate string `json:"publication_date"`
+	Version         string `json:"version"`
+}
+
 // Cluster defines model for Cluster.
 type Cluster struct {
 	Id         *string        `json:"id,omitempty"`
@@ -58,6 +83,12 @@ type RegistrarCluster struct {
 	Name       string  `json:"name"`
 	Region     string  `json:"region"`
 }
+
+// AddCatalogComponentJSONRequestBody defines body for AddCatalogComponent for application/json ContentType.
+type AddCatalogComponentJSONRequestBody = CatalogComponent
+
+// AddCatalogComponentVersionJSONRequestBody defines body for AddCatalogComponentVersion for application/json ContentType.
+type AddCatalogComponentVersionJSONRequestBody = CatalogComponentVersion
 
 // CreateClusterJSONRequestBody defines body for CreateCluster for application/json ContentType.
 type CreateClusterJSONRequestBody = Cluster
@@ -138,6 +169,31 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// ListCatalogComponents request
+	ListCatalogComponents(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AddCatalogComponentWithBody request with any body
+	AddCatalogComponentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AddCatalogComponent(ctx context.Context, body AddCatalogComponentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteCatalogComponent request
+	DeleteCatalogComponent(ctx context.Context, componentName string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetCatalogComponent request
+	GetCatalogComponent(ctx context.Context, componentName string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AddCatalogComponentVersionWithBody request with any body
+	AddCatalogComponentVersionWithBody(ctx context.Context, componentName string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	AddCatalogComponentVersion(ctx context.Context, componentName string, body AddCatalogComponentVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteCatalogComponentVersion request
+	DeleteCatalogComponentVersion(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetCatalogComponentVersion request
+	GetCatalogComponentVersion(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListClusters request
 	ListClusters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -165,6 +221,114 @@ type ClientInterface interface {
 
 	// GetRegistrarCluster request
 	GetRegistrarCluster(ctx context.Context, clusterRegistrarId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) ListCatalogComponents(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListCatalogComponentsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AddCatalogComponentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddCatalogComponentRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AddCatalogComponent(ctx context.Context, body AddCatalogComponentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddCatalogComponentRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteCatalogComponent(ctx context.Context, componentName string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteCatalogComponentRequest(c.Server, componentName)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetCatalogComponent(ctx context.Context, componentName string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCatalogComponentRequest(c.Server, componentName)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AddCatalogComponentVersionWithBody(ctx context.Context, componentName string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddCatalogComponentVersionRequestWithBody(c.Server, componentName, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AddCatalogComponentVersion(ctx context.Context, componentName string, body AddCatalogComponentVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddCatalogComponentVersionRequest(c.Server, componentName, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteCatalogComponentVersion(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteCatalogComponentVersionRequest(c.Server, componentName, componentVersion)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetCatalogComponentVersion(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCatalogComponentVersionRequest(c.Server, componentName, componentVersion)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) ListClusters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -285,6 +449,270 @@ func (c *Client) GetRegistrarCluster(ctx context.Context, clusterRegistrarId str
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewListCatalogComponentsRequest generates requests for ListCatalogComponents
+func NewListCatalogComponentsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/catalog")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAddCatalogComponentRequest calls the generic AddCatalogComponent builder with application/json body
+func NewAddCatalogComponentRequest(server string, body AddCatalogComponentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAddCatalogComponentRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewAddCatalogComponentRequestWithBody generates requests for AddCatalogComponent with any type of body
+func NewAddCatalogComponentRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/catalog/components")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteCatalogComponentRequest generates requests for DeleteCatalogComponent
+func NewDeleteCatalogComponentRequest(server string, componentName string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "componentName", runtime.ParamLocationPath, componentName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/catalog/components/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetCatalogComponentRequest generates requests for GetCatalogComponent
+func NewGetCatalogComponentRequest(server string, componentName string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "componentName", runtime.ParamLocationPath, componentName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/catalog/components/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAddCatalogComponentVersionRequest calls the generic AddCatalogComponentVersion builder with application/json body
+func NewAddCatalogComponentVersionRequest(server string, componentName string, body AddCatalogComponentVersionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAddCatalogComponentVersionRequestWithBody(server, componentName, "application/json", bodyReader)
+}
+
+// NewAddCatalogComponentVersionRequestWithBody generates requests for AddCatalogComponentVersion with any type of body
+func NewAddCatalogComponentVersionRequestWithBody(server string, componentName string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "componentName", runtime.ParamLocationPath, componentName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/catalog/components/%s/versions", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteCatalogComponentVersionRequest generates requests for DeleteCatalogComponentVersion
+func NewDeleteCatalogComponentVersionRequest(server string, componentName string, componentVersion string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "componentName", runtime.ParamLocationPath, componentName)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "componentVersion", runtime.ParamLocationPath, componentVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/catalog/components/%s/versions/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetCatalogComponentVersionRequest generates requests for GetCatalogComponentVersion
+func NewGetCatalogComponentVersionRequest(server string, componentName string, componentVersion string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "componentName", runtime.ParamLocationPath, componentName)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "componentVersion", runtime.ParamLocationPath, componentVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/catalog/components/%s/versions/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // NewListClustersRequest generates requests for ListClusters
@@ -614,6 +1042,31 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// ListCatalogComponentsWithResponse request
+	ListCatalogComponentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListCatalogComponentsResponse, error)
+
+	// AddCatalogComponentWithBodyWithResponse request with any body
+	AddCatalogComponentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddCatalogComponentResponse, error)
+
+	AddCatalogComponentWithResponse(ctx context.Context, body AddCatalogComponentJSONRequestBody, reqEditors ...RequestEditorFn) (*AddCatalogComponentResponse, error)
+
+	// DeleteCatalogComponentWithResponse request
+	DeleteCatalogComponentWithResponse(ctx context.Context, componentName string, reqEditors ...RequestEditorFn) (*DeleteCatalogComponentResponse, error)
+
+	// GetCatalogComponentWithResponse request
+	GetCatalogComponentWithResponse(ctx context.Context, componentName string, reqEditors ...RequestEditorFn) (*GetCatalogComponentResponse, error)
+
+	// AddCatalogComponentVersionWithBodyWithResponse request with any body
+	AddCatalogComponentVersionWithBodyWithResponse(ctx context.Context, componentName string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddCatalogComponentVersionResponse, error)
+
+	AddCatalogComponentVersionWithResponse(ctx context.Context, componentName string, body AddCatalogComponentVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*AddCatalogComponentVersionResponse, error)
+
+	// DeleteCatalogComponentVersionWithResponse request
+	DeleteCatalogComponentVersionWithResponse(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*DeleteCatalogComponentVersionResponse, error)
+
+	// GetCatalogComponentVersionWithResponse request
+	GetCatalogComponentVersionWithResponse(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*GetCatalogComponentVersionResponse, error)
+
 	// ListClustersWithResponse request
 	ListClustersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListClustersResponse, error)
 
@@ -641,6 +1094,164 @@ type ClientWithResponsesInterface interface {
 
 	// GetRegistrarClusterWithResponse request
 	GetRegistrarClusterWithResponse(ctx context.Context, clusterRegistrarId string, reqEditors ...RequestEditorFn) (*GetRegistrarClusterResponse, error)
+}
+
+type ListCatalogComponentsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Catalog
+}
+
+// Status returns HTTPResponse.Status
+func (r ListCatalogComponentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListCatalogComponentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AddCatalogComponentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *CatalogComponent
+	JSON400      *Error
+	JSON409      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r AddCatalogComponentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AddCatalogComponentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteCatalogComponentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON409      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteCatalogComponentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteCatalogComponentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetCatalogComponentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CatalogComponent
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCatalogComponentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCatalogComponentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AddCatalogComponentVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *CatalogComponentVersion
+	JSON400      *Error
+	JSON409      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r AddCatalogComponentVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AddCatalogComponentVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteCatalogComponentVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON409      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteCatalogComponentVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteCatalogComponentVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetCatalogComponentVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CatalogComponentVersion
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCatalogComponentVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCatalogComponentVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type ListClustersResponse struct {
@@ -824,6 +1435,85 @@ func (r GetRegistrarClusterResponse) StatusCode() int {
 	return 0
 }
 
+// ListCatalogComponentsWithResponse request returning *ListCatalogComponentsResponse
+func (c *ClientWithResponses) ListCatalogComponentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListCatalogComponentsResponse, error) {
+	rsp, err := c.ListCatalogComponents(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListCatalogComponentsResponse(rsp)
+}
+
+// AddCatalogComponentWithBodyWithResponse request with arbitrary body returning *AddCatalogComponentResponse
+func (c *ClientWithResponses) AddCatalogComponentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddCatalogComponentResponse, error) {
+	rsp, err := c.AddCatalogComponentWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddCatalogComponentResponse(rsp)
+}
+
+func (c *ClientWithResponses) AddCatalogComponentWithResponse(ctx context.Context, body AddCatalogComponentJSONRequestBody, reqEditors ...RequestEditorFn) (*AddCatalogComponentResponse, error) {
+	rsp, err := c.AddCatalogComponent(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddCatalogComponentResponse(rsp)
+}
+
+// DeleteCatalogComponentWithResponse request returning *DeleteCatalogComponentResponse
+func (c *ClientWithResponses) DeleteCatalogComponentWithResponse(ctx context.Context, componentName string, reqEditors ...RequestEditorFn) (*DeleteCatalogComponentResponse, error) {
+	rsp, err := c.DeleteCatalogComponent(ctx, componentName, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteCatalogComponentResponse(rsp)
+}
+
+// GetCatalogComponentWithResponse request returning *GetCatalogComponentResponse
+func (c *ClientWithResponses) GetCatalogComponentWithResponse(ctx context.Context, componentName string, reqEditors ...RequestEditorFn) (*GetCatalogComponentResponse, error) {
+	rsp, err := c.GetCatalogComponent(ctx, componentName, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCatalogComponentResponse(rsp)
+}
+
+// AddCatalogComponentVersionWithBodyWithResponse request with arbitrary body returning *AddCatalogComponentVersionResponse
+func (c *ClientWithResponses) AddCatalogComponentVersionWithBodyWithResponse(ctx context.Context, componentName string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AddCatalogComponentVersionResponse, error) {
+	rsp, err := c.AddCatalogComponentVersionWithBody(ctx, componentName, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddCatalogComponentVersionResponse(rsp)
+}
+
+func (c *ClientWithResponses) AddCatalogComponentVersionWithResponse(ctx context.Context, componentName string, body AddCatalogComponentVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*AddCatalogComponentVersionResponse, error) {
+	rsp, err := c.AddCatalogComponentVersion(ctx, componentName, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddCatalogComponentVersionResponse(rsp)
+}
+
+// DeleteCatalogComponentVersionWithResponse request returning *DeleteCatalogComponentVersionResponse
+func (c *ClientWithResponses) DeleteCatalogComponentVersionWithResponse(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*DeleteCatalogComponentVersionResponse, error) {
+	rsp, err := c.DeleteCatalogComponentVersion(ctx, componentName, componentVersion, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteCatalogComponentVersionResponse(rsp)
+}
+
+// GetCatalogComponentVersionWithResponse request returning *GetCatalogComponentVersionResponse
+func (c *ClientWithResponses) GetCatalogComponentVersionWithResponse(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*GetCatalogComponentVersionResponse, error) {
+	rsp, err := c.GetCatalogComponentVersion(ctx, componentName, componentVersion, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCatalogComponentVersionResponse(rsp)
+}
+
 // ListClustersWithResponse request returning *ListClustersResponse
 func (c *ClientWithResponses) ListClustersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListClustersResponse, error) {
 	rsp, err := c.ListClusters(ctx, reqEditors...)
@@ -910,6 +1600,216 @@ func (c *ClientWithResponses) GetRegistrarClusterWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParseGetRegistrarClusterResponse(rsp)
+}
+
+// ParseListCatalogComponentsResponse parses an HTTP response from a ListCatalogComponentsWithResponse call
+func ParseListCatalogComponentsResponse(rsp *http.Response) (*ListCatalogComponentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListCatalogComponentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Catalog
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddCatalogComponentResponse parses an HTTP response from a AddCatalogComponentWithResponse call
+func ParseAddCatalogComponentResponse(rsp *http.Response) (*AddCatalogComponentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AddCatalogComponentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest CatalogComponent
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteCatalogComponentResponse parses an HTTP response from a DeleteCatalogComponentWithResponse call
+func ParseDeleteCatalogComponentResponse(rsp *http.Response) (*DeleteCatalogComponentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteCatalogComponentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetCatalogComponentResponse parses an HTTP response from a GetCatalogComponentWithResponse call
+func ParseGetCatalogComponentResponse(rsp *http.Response) (*GetCatalogComponentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCatalogComponentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CatalogComponent
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddCatalogComponentVersionResponse parses an HTTP response from a AddCatalogComponentVersionWithResponse call
+func ParseAddCatalogComponentVersionResponse(rsp *http.Response) (*AddCatalogComponentVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AddCatalogComponentVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest CatalogComponentVersion
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteCatalogComponentVersionResponse parses an HTTP response from a DeleteCatalogComponentVersionWithResponse call
+func ParseDeleteCatalogComponentVersionResponse(rsp *http.Response) (*DeleteCatalogComponentVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteCatalogComponentVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetCatalogComponentVersionResponse parses an HTTP response from a GetCatalogComponentVersionWithResponse call
+func ParseGetCatalogComponentVersionResponse(rsp *http.Response) (*GetCatalogComponentVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCatalogComponentVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CatalogComponentVersion
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseListClustersResponse parses an HTTP response from a ListClustersWithResponse call
@@ -1115,6 +2015,27 @@ func ParseGetRegistrarClusterResponse(rsp *http.Response) (*GetRegistrarClusterR
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// List all components in the catalog
+	// (GET /v1/catalog)
+	ListCatalogComponents(ctx echo.Context) error
+	// Add a new component to the catalog
+	// (POST /v1/catalog/components)
+	AddCatalogComponent(ctx echo.Context) error
+	// Delete a component from the catalog
+	// (DELETE /v1/catalog/components/{componentName})
+	DeleteCatalogComponent(ctx echo.Context, componentName string) error
+	// Get a component in the catalog
+	// (GET /v1/catalog/components/{componentName})
+	GetCatalogComponent(ctx echo.Context, componentName string) error
+	// Add a new component version to the catalog
+	// (POST /v1/catalog/components/{componentName}/versions)
+	AddCatalogComponentVersion(ctx echo.Context, componentName string) error
+	// Delete a component version from the catalog
+	// (DELETE /v1/catalog/components/{componentName}/versions/{componentVersion})
+	DeleteCatalogComponentVersion(ctx echo.Context, componentName string, componentVersion string) error
+	// Get a component version in the catalog
+	// (GET /v1/catalog/components/{componentName}/versions/{componentVersion})
+	GetCatalogComponentVersion(ctx echo.Context, componentName string, componentVersion string) error
 	// List all clusters
 	// (GET /v1/clusters)
 	ListClusters(ctx echo.Context) error
@@ -1144,6 +2065,148 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// ListCatalogComponents converts echo context to params.
+func (w *ServerInterfaceWrapper) ListCatalogComponents(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	ctx.Set(BasicAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ListCatalogComponents(ctx)
+	return err
+}
+
+// AddCatalogComponent converts echo context to params.
+func (w *ServerInterfaceWrapper) AddCatalogComponent(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(BearerAuthScopes, []string{"catalog_admin"})
+
+	ctx.Set(BasicAuthScopes, []string{"catalog_admin"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.AddCatalogComponent(ctx)
+	return err
+}
+
+// DeleteCatalogComponent converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteCatalogComponent(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "componentName" -------------
+	var componentName string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentName", ctx.Param("componentName"), &componentName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentName: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"catalog_admin"})
+
+	ctx.Set(BasicAuthScopes, []string{"catalog_admin"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteCatalogComponent(ctx, componentName)
+	return err
+}
+
+// GetCatalogComponent converts echo context to params.
+func (w *ServerInterfaceWrapper) GetCatalogComponent(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "componentName" -------------
+	var componentName string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentName", ctx.Param("componentName"), &componentName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentName: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	ctx.Set(BasicAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetCatalogComponent(ctx, componentName)
+	return err
+}
+
+// AddCatalogComponentVersion converts echo context to params.
+func (w *ServerInterfaceWrapper) AddCatalogComponentVersion(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "componentName" -------------
+	var componentName string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentName", ctx.Param("componentName"), &componentName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentName: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"catalog_admin"})
+
+	ctx.Set(BasicAuthScopes, []string{"catalog_admin"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.AddCatalogComponentVersion(ctx, componentName)
+	return err
+}
+
+// DeleteCatalogComponentVersion converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteCatalogComponentVersion(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "componentName" -------------
+	var componentName string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentName", ctx.Param("componentName"), &componentName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentName: %s", err))
+	}
+
+	// ------------- Path parameter "componentVersion" -------------
+	var componentVersion string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentVersion", ctx.Param("componentVersion"), &componentVersion, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentVersion: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{"catalog_admin"})
+
+	ctx.Set(BasicAuthScopes, []string{"catalog_admin"})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteCatalogComponentVersion(ctx, componentName, componentVersion)
+	return err
+}
+
+// GetCatalogComponentVersion converts echo context to params.
+func (w *ServerInterfaceWrapper) GetCatalogComponentVersion(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "componentName" -------------
+	var componentName string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentName", ctx.Param("componentName"), &componentName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentName: %s", err))
+	}
+
+	// ------------- Path parameter "componentVersion" -------------
+	var componentVersion string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentVersion", ctx.Param("componentVersion"), &componentVersion, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentVersion: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	ctx.Set(BasicAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetCatalogComponentVersion(ctx, componentName, componentVersion)
+	return err
 }
 
 // ListClusters converts echo context to params.
@@ -1322,6 +2385,13 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.GET(baseURL+"/v1/catalog", wrapper.ListCatalogComponents)
+	router.POST(baseURL+"/v1/catalog/components", wrapper.AddCatalogComponent)
+	router.DELETE(baseURL+"/v1/catalog/components/:componentName", wrapper.DeleteCatalogComponent)
+	router.GET(baseURL+"/v1/catalog/components/:componentName", wrapper.GetCatalogComponent)
+	router.POST(baseURL+"/v1/catalog/components/:componentName/versions", wrapper.AddCatalogComponentVersion)
+	router.DELETE(baseURL+"/v1/catalog/components/:componentName/versions/:componentVersion", wrapper.DeleteCatalogComponentVersion)
+	router.GET(baseURL+"/v1/catalog/components/:componentName/versions/:componentVersion", wrapper.GetCatalogComponentVersion)
 	router.GET(baseURL+"/v1/clusters", wrapper.ListClusters)
 	router.POST(baseURL+"/v1/clusters", wrapper.CreateCluster)
 	router.DELETE(baseURL+"/v1/clusters/:region/:clusterId", wrapper.DeleteCluster)
@@ -1336,23 +2406,29 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+RWXW/bNhT9KwS3R8FWtrzMb2k6FEbXYVge02CgxWuZnURy5FU6w9B/HyiKshRSjrO0",
-	"yYa+GDJ5eb/O4eU50ELVWkmQaOnqQG2xg5p1n9dVYxGM+9RGaTAooNsQ3P3iXgNdUYtGyJK2Gf2z2UCh",
-	"5FaUbvt7A1u6ot8tj/6XvfPl+6Nlm1HJakg6NFAKJZNbFhk29rE4fQU33rjN6D0Ym3bZhfurEQY4Xd36",
-	"nIYMjgfvsnBQbT5Bgc7pNErULSUrIccFbpSqgEl3VO+Yhcez6V0E+1QSPxujElBBWD4dwJul/L6fgBrh",
-	"8DuUwqJh5nlkibafzomTAMaVOQ5B0RiB+xvHFp/shllRXDW4G65CB5hbpYOLHaJ2qWyAGTCxdbf80NwF",
-	"FHKrnGmhJLIC3aevk/6iREHeVKprOQdbGKGxq5NeSXL125qgIoUBhkAcIkYCgiWFb7olShIONZPcfWmj",
-	"7gUHPrL8KGsmWQk1SBxOLT46ZqPAyqXwgVX7UlkXbMT3Fb1Y5IvcpaU0SKYFXdEfFxeL3LGR4a5r2/L+",
-	"Yhm8uv8ldMU5GjBXxpq7GoXF62DkkLFaSev7/kOeh8aA7M4yrStRdKeXn6xH3F/rmGLj0AKhPncuuKp6",
-	"kJgxbO/+f2ZGCllOfUUsnJ56QL0hnQTrInhdV4jaDqA475f5pYs6NfxVBRuyVY3kEwrT1e1hwsfbuzbr",
-	"6dz9ucuobeqamX2IyapqElQrmwDtuuNc6JevEyy+UXz/JMDOQmPaSDQNtBFPLr5O2Gmv+63+xvGMGMDG",
-	"SEt2e27cSuicRyuP0VrLe1YJToTUDdLszJT8EG/nKHCjasCdkCWRCnsW/BvXP8WuQ8WsMsD4nsDfwqI9",
-	"m2PDwoRnnjyEEQmfjx1rs8m8WB78jG6Xh35pzVufYAUIMSXfdutHSmpmWA3+/t/O1bV+S938patuaNHw",
-	"wNAhJH1IvXFjo6dmLsygFxKhhr3z49xF9L+ch873i88OkGB35M7z0PU4EDa+C8nB/w7wG0Urf8lh1WP6",
-	"Qui/AxxD319qE+TgaRnwUDW+th6IVOx/SBgkhNspjRCbnwV3yO0PxmshaYR+tJ8WFDPJntIWUe+/jsiI",
-	"IX5ZtZGOP4XvQ4zdvAKJWz0SI18k5SAZojyn4mZOUiSqeZK6eB4lJ9oj1atoYg36Y4DqLCGS4O/JNy7R",
-	"lkeeu1E+X149JNJ5TEgkjpz7qjwP00FxpLk/Jz7+Twjlrz1wTquIV4Pey43kPW7bfwIAAP//fDX1zMQU",
-	"AAA=",
+	"H4sIAAAAAAAC/+xZW2/bNhT+KwK3RyF2tr7Ub2k6FEHXYliAvqRBQIsnNjuJ1EgqnWH4vw8USd1IXRzb",
+	"cYbuTRYv55zvfDznM7VFCc9yzoApiRZbJJM1ZLh8vMYKp3ylH3PBcxCKQjnQXkEVZOXDzwIe0QL9NKvH",
+	"Z3a7md3r2o2gXYzUJge0QFgIvEG7XYwE/F1QAQQt7po27qupfPkNknKtt5/nJAGZCJorypn+aXeQSlC2",
+	"0jvQpGcgxQqkengCIfvWMpxBcCAvlimVax1CNbrkPAXM9LBcc6EexjwrRBp8bz1qg+7NGkS1dDzkR4za",
+	"v7QPFqMp8H+pwdovC8DwMu2Dq0QzwXrxA8EKhlAJjHVidxO7oXpWggGnhVQg/AApCXr1V7GEhLNHuho7",
+	"GR/rmUPMErDqw1AqrIrxE2giuDWT9wHOksZ6UC8cwOm2cqmNFmcpZdCT7TWWMO6N3cLNDznxmxA8kCpw",
+	"r4cNmGmhfT+2kurl4U9YUakEFoeRZXq16eXEYAL9yDSHICkEVZtbzRbj7BJLmlwVal21hTJh+i2qtlgr",
+	"lWtXloAFCH92+bo7XRuk7JGbXsIUTsr6beJEv3OaRO9SXkLeqh/oikVXf9xEikeJAKwg0hkRDBTIKDGg",
+	"y4iziECGGdFPueBPlABpzPzKMszwCjJgqlp18VUzW1GVahc+4XSz4lIba/B9gS4v5hdz7RbPgeGcogX6",
+	"9eLyYq7ZiNW6hG32dDlL6s65gjI2zYKyxNwQHSKVqltCZZkhmXMmDf6/zOcOINvgcJ67SjX7Jk3mzfGe",
+	"2H4N9G1MtS8Rf4waDXcXozfzN175Rp95PSt65AUjLe6gxd22RYS7+13c4tHd/e4+RrLIMiw2zjZO04bx",
+	"iLJIrSFKKo/jJqSztvbIuQzAe0WIpw/MiQCp3nGyOTauDVnTPntKFLDz8np5YvvtrFWDESb6JCjeBlgn",
+	"+3hMM7U34MYNe8IpJRFleaGM1bent9oIPhWAySaCf6jUHB8kLrLoPGCSUYY8HnvjLVpfERLhiMH3xnHp",
+	"ot5L69m2ev6MM9iZY5iCkT9tor8v3we4nmOBM9CFrYytDxPbGKh+qwsYcs0GtXxAXUrHjbR0W8+9R/dA",
+	"JaldMKGR3prTcJZXRefFyZNgps0vofb3hPwxaY1ws9oKnnWPbbC1fAD12vkwP1P5a5BnKtEO6m4fQLVy",
+	"OLmzdUvArPnPb3LL+1L93zl39k/fd12sZ26/LTf6YLbJ/LG7cQXCebuyc+PZ3bk6mo0By4JndO5XcWTj",
+	"7VjWRizWUZxMNbi8TVcPbsU5VYTz4exqwjlyiKr4n6svoWj26ihTBU7gLBxV6Lj9+wSPvXMZvh5xkw4E",
+	"u/PlomF62ncLe5XnXazH6DsWjLLVIdfxlTuBO7n+ixq3aOiaxszZM7tDFzQNo2EFel3eyDm8TiT7XDZe",
+	"WOY1zXYOlQXa3EeSOBKgCsFktN4Qod845BrKbkiJxXt2mx4K3PIM1JqyVeOMP2frt4EyYiPeS7mNVRBD",
+	"HifPKrjb9WK2NTfYu9nWvrohU0RWRcnhRmXjunnf0zKcyQMblDVTfU0JmKrGjq2frO1R1WTnHas/1Aqk",
+	"Pgu9MuPHzNb8JYvViE44cvatOugcauE+lg3LgO43tXPrAe8b3ysSBoHPWkMawZ8+Kd3Ot/4/I53xsKDo",
+	"cXZIW3jYn0Zk+Cl+WbURtt9O3yc/d/0KxIf67NdMo9HseS90CCVb2iOElVexKv1RpWqSEAnwd7DHBWAZ",
+	"aXcNf46vHgLujAmJwJKpXeWwnFaKI8z9PvHxX8rQ/NwFZ1hFnC31Rm4Ez/Fu928AAAD//7AZCyvuKAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

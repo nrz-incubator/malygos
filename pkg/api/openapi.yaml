@@ -215,6 +215,200 @@ paths:
           description: Management cluster deleted
         "404":
           description: Management cluster not found
+  # Catalog management
+  /v1/catalog:
+    get:
+      summary: List all components in the catalog
+      operationId: listCatalogComponents
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      responses:
+        "200":
+          description: List of components
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Catalog"
+        "404":
+          description: No component found
+  /v1/catalog/components:
+    post:
+      summary: Add a new component to the catalog
+      operationId: addCatalogComponent
+      security:
+        - bearerAuth: [catalog_admin]
+        - basicAuth: [catalog_admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogComponent"
+      responses:
+        "201":
+          description: Component added to the catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogComponent"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Component already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /v1/catalog/components/{componentName}:
+    get:
+      summary: Get a component in the catalog
+      operationId: getCatalogComponent
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      parameters:
+        - name: componentName
+          in: path
+          required: true
+          description: Component name
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Component found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogComponent"
+        "404":
+          description: Component not found
+    delete:
+      summary: Delete a component from the catalog
+      operationId: deleteCatalogComponent
+      security:
+        - bearerAuth: [catalog_admin]
+        - basicAuth: [catalog_admin]
+      parameters:
+        - name: componentName
+          in: path
+          required: true
+          description: Component name
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Component deleted
+        "404":
+          description: Component not found
+        "409":
+          description: Component cannot be deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /v1/catalog/components/{componentName}/versions:
+    post:
+      summary: Add a new component version to the catalog
+      operationId: addCatalogComponentVersion
+      security:
+        - bearerAuth: [catalog_admin]
+        - basicAuth: [catalog_admin]
+      parameters:
+        - name: componentName
+          in: path
+          required: true
+          description: Component name
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogComponentVersion"
+      responses:
+        "201":
+          description: Component version added to the catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogComponentVersion"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Component version already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /v1/catalog/components/{componentName}/versions/{componentVersion}:
+    get:
+      summary: Get a component version in the catalog
+      operationId: getCatalogComponentVersion
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      parameters:
+        - name: componentName
+          in: path
+          required: true
+          description: Component name
+          schema:
+            type: string
+        - name: componentVersion
+          in: path
+          required: true
+          description: Component version
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Component version found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogComponentVersion"
+        "404":
+          description: Component version not found
+    delete:
+      summary: Delete a component version from the catalog
+      operationId: deleteCatalogComponentVersion
+      security:
+        - bearerAuth: [catalog_admin]
+        - basicAuth: [catalog_admin]
+      parameters:
+        - name: componentName
+          in: path
+          required: true
+          description: Component name
+          schema:
+            type: string
+        - name: componentVersion
+          in: path
+          required: true
+          description: Component version
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Component version deleted
+        "404":
+          description: Component version not found
+        "409":
+          description: Component version cannot be deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   securitySchemes:
     bearerAuth:
@@ -231,6 +425,7 @@ components:
           type: string
       required:
         - error
+    # Cluster related schemas
     Kubeconfig:
       type: string
     ClusterStatus:
@@ -276,3 +471,55 @@ components:
       required:
         - name
         - region
+    # Catalog related schemas
+    CatalogComponent:
+      type: object
+      properties:
+        name:
+          type: string
+        versions:
+          type: array
+          items:
+            type: string
+        latest_version:
+          type: string
+        short_description:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        icon:
+          type: string
+        published:
+          type: boolean
+      required:
+        - name
+        - short_description
+        - description
+        - url
+        - icon
+    CatalogComponentVersion:
+      type: object
+      properties:
+        version:
+          type: string
+        description:
+          type: string
+        publication_date:
+          type: string
+        enabled:
+          type: boolean
+      required:
+        - version
+        - description
+        - publication_date
+    Catalog:
+      type: object
+      properties:
+        components:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogComponent"
+      required:
+        - components

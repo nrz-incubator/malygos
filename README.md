@@ -9,6 +9,10 @@ It permits to have decentralized Kubernetes cluster spawning, per region for exa
 
 Note: This is currently in heavy development and experimental, use it at your own risk.
 
+## Naming
+
+
+
 ## Components
 
 * `malygos-controller`: The main controller that will orchestrate regional controllers

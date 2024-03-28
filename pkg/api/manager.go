@@ -13,6 +13,6 @@ type Manager interface {
 
 	InstanciateClusterManager(logr.Logger, *kubernetes.Clientset, *dynamic.DynamicClient) ClusterManager
 	GetClusterManager(region string) (ClusterManager, error)
-
+	GetCatalog() CatalogManager
 	GetRBAC() RBAC
 }
