@@ -37,3 +37,15 @@ func IsNotFound(err error) bool {
 	_, ok := err.(*NotFoundError)
 	return ok
 }
+
+type InvalidArgumentError struct {
+	what string
+}
+
+func NewInvalidArgumentError(what string) *InvalidArgumentError {
+	return &InvalidArgumentError{what: what}
+}
+
+func (e *InvalidArgumentError) Error() string {
+	return fmt.Sprintf("invalid argument: %s", e.what)
+}

@@ -34,16 +34,8 @@ func (api *ApiImpl) CreateCluster(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	if cluster.Id != nil {
-		return c.JSON(http.StatusBadRequest, Error{Error: "id field is not allowed"})
-	}
-
-	if cluster.Region == "" {
-		return c.JSON(http.StatusBadRequest, Error{Error: "region field is required"})
-	}
-
-	if cluster.Name == "" {
-		return c.JSON(http.StatusBadRequest, Error{Error: "name field is required"})
+	if err := cluster.ValidateInputs(); err != nil {
+		return c.JSON(http.StatusBadRequest, Error{Error: err.Error()})
 	}
 
 	clusterManager, err := api.manager.GetClusterManager(cluster.Region)

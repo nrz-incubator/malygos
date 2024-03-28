@@ -78,7 +78,7 @@ func (m *KamajiClusterManager) Create(cluster *api.Cluster) (*api.Cluster, error
 				},
 			},
 			Kubernetes: kamaji.KubernetesSpec{
-				Version: "v1.28.1",
+				Version: cluster.Version,
 				Kubelet: kamaji.KubeletSpec{
 					CGroupFS: "systemd",
 				},
