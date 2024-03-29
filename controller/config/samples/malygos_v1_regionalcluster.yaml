@@ -1,0 +1,12 @@
+apiVersion: malygos.00n.fr/v1
+kind: RegionalCluster
+metadata:
+  labels:
+    app.kubernetes.io/name: regionalcluster
+    app.kubernetes.io/instance: regionalcluster-sample
+    app.kubernetes.io/part-of: controller
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: controller
+  name: regionalcluster-sample
+spec:
+  # TODO(user): Add fields here

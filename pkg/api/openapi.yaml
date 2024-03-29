@@ -491,8 +491,10 @@ components:
           type: string
         icon:
           type: string
-        published:
-          type: boolean
+        published_regions:
+          type: array
+          items:
+            type: string
       required:
         - name
         - short_description
@@ -508,8 +510,10 @@ components:
           type: string
         publication_date:
           type: string
-        enabled:
-          type: boolean
+        published_regions:
+          type: array
+          items:
+            type: string
       required:
         - version
         - description
