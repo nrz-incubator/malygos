@@ -1,0 +1,47 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: catalogcomponents.malygos.00n.fr
+spec:
+  group: malygos.00n.fr
+  names:
+    kind: CatalogComponent
+    listKind: CatalogComponentList
+    plural: catalogcomponents
+    singular: catalogcomponent
+  scope: Namespaced
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              name:
+                type: string
+              versions:
+                type: array
+                items:
+                  type: string
+              latest_version:
+                type: string
+              short_description:
+                type: string
+              description:
+                type: string
+              url:
+                type: string
+              icon:
+                type: string
+              published:
+                type: boolean
+            required:
+              - name
+              - short_description
+              - description
+              - url
+              - icon

@@ -467,7 +467,7 @@ components:
         region:
           type: string
         kubeconfig:
-          type: string
+          $ref: "#/components/schemas/Kubeconfig"
       required:
         - name
         - region
