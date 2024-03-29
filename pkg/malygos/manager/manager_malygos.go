@@ -29,7 +29,7 @@ func NewMalygosManager(logger logr.Logger, kubeconfig string, namespace string) 
 		return nil, fmt.Errorf("failed to build k8s config: %v", err)
 	}
 
-	registarManager, err := clusterregistrar.NewInKubeClusterManagerLegacy(logger, config, namespace)
+	registarManager, err := clusterregistrar.NewInKubeClusterManager(logger, config, namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create cluster manager: %v", err)
 	}

@@ -1,8 +1,0 @@
-## Append samples of your project ##
-resources:
-- malygos_v1_regionalcluster.yaml
-- malygos_v1_cluster.yaml
-- malygos_v1_registrar.yaml
-- malygos_v1_component.yaml
-- malygos_v1_componentversion.yaml
-#+kubebuilder:scaffold:manifestskustomizesamples
