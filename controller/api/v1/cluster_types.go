@@ -22,15 +22,17 @@ import (
 
 // ClusterSpec defines the desired state of Cluster
 type ClusterSpec struct {
-	Version string `json:"version,omitempty"`
-	Region  string `json:"region,omitempty"`
+	Version    string                   `json:"version,omitempty"`
+	Region     string                   `json:"region,omitempty"`
+	Components []InstalledComponentsRef `json:"components,omitempty"`
 }
 
 // ClusterStatus defines the observed state of Cluster
 type ClusterStatus struct {
-	Kubeconfig *string `json:"kubeconfig,omitempty"`
-	Ready      *bool   `json:"ready,omitempty"`
-	Phase      *string `json:"phase,omitempty"`
+	Kubeconfig *string                  `json:"kubeconfig,omitempty"`
+	Ready      *bool                    `json:"ready,omitempty"`
+	Phase      *string                  `json:"phase,omitempty"`
+	Components []InstalledComponentsRef `json:"components,omitempty"`
 }
 
 //+kubebuilder:object:root=true

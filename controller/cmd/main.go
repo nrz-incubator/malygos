@@ -34,8 +34,8 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	malygosv1 "github.com/nrz-incubator/malygos/api/v1"
-	"github.com/nrz-incubator/malygos/internal/controller"
+	malygosv1 "github.com/nrz-incubator/malygos/controller/api/v1"
+	"github.com/nrz-incubator/malygos/controller/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
 

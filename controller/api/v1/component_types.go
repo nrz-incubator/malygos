@@ -58,6 +58,11 @@ type ComponentList struct {
 	Items           []Component `json:"items"`
 }
 
+type InstalledComponentsRef struct {
+	Name    string `json:"name,omitempty"`
+	Version string `json:"version,omitempty"`
+}
+
 func init() {
 	SchemeBuilder.Register(&Component{}, &ComponentList{})
 }

@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	malygosv1 "github.com/nrz-incubator/malygos/api/v1"
+	malygosv1 "github.com/nrz-incubator/malygos/controller/api/v1"
 )
 
 // ClusterReconciler reconciles a Cluster object

@@ -5,20 +5,13 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	malygosv1 "github.com/nrz-incubator/malygos/controller/api/v1"
 	"github.com/nrz-incubator/malygos/pkg/api"
 	"github.com/nrz-incubator/malygos/pkg/errors"
-	"github.com/nrz-incubator/malygos/pkg/util"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-)
-
-const (
-	managementClusterSecretType          = "malygos.local/management-cluster"
-	managementClusterLabelRegion         = "malygos.local/region"
-	managementClusterLabelName           = "malygos.local/name"
-	managementClusterGeneratedNameLength = 10
 )
 
 type InKubeClusterManager struct {
@@ -27,13 +20,13 @@ type InKubeClusterManager struct {
 	logger       logr.Logger
 }
 
-func NewInKubeClusterManager(logger logr.Logger, config *rest.Config, namespace string) (*InKubeClusterManager, error) {
+func NewInKubeClusterManager(logger logr.Logger, config *rest.Config, namespace string) (*InKubeClusterManagerLegacy, error) {
 	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create k8s client: %v", err)
 	}
 
-	return &InKubeClusterManager{
+	return &InKubeClusterManagerLegacy{
 		logger:       logger,
 		client:       client,
 		cfgNamespace: namespace,
@@ -49,6 +42,8 @@ func (m *InKubeClusterManager) Create(cluster *api.ClusterRegistrar) (*api.Clust
 	if mc != nil {
 		return nil, errors.NewConflictError("region", cluster.Region)
 	}
+
+	registrar := malygosv1.Registrar{}
 
 	secretName := generateSecretName()
 	secret := &v1.Secret{
@@ -123,39 +118,4 @@ func (m *InKubeClusterManager) Get(region string) (*api.ClusterRegistrar, error)
 	}
 
 	return nil, nil
-}
-
-func decodeSecret(secret *v1.Secret) (*api.ClusterRegistrar, error) {
-	if secret.Type != managementClusterSecretType {
-		return nil, newSecretTypeError()
-	}
-
-	if _, ok := secret.Data["kubeconfig"]; !ok {
-		return nil, fmt.Errorf("kubeconfig not found in secret")
-	}
-
-	if _, ok := secret.Labels[managementClusterLabelRegion]; !ok {
-		return nil, fmt.Errorf("%s label not found in secret", managementClusterLabelRegion)
-	}
-
-	if _, ok := secret.Labels[managementClusterLabelName]; !ok {
-		return nil, fmt.Errorf("%s label not found in secret", managementClusterLabelName)
-	}
-
-	return &api.ClusterRegistrar{
-		Id:         string(secret.Name),
-		Name:       string(secret.Labels[managementClusterLabelName]),
-		Kubeconfig: string(secret.Data["kubeconfig"]),
-		Region:     string(secret.Labels[managementClusterLabelRegion]),
-	}, nil
-}
-
-func generateSecretName() string {
-	return fmt.Sprintf("malygos-mc-%s", util.GenerateRandomString(managementClusterGeneratedNameLength))
-}
-
-func getIDFromSecretName(secretName string) (string, error) {
-	var id string
-	_, err := fmt.Sscanf(secretName, "malygos-mc-%s", &id)
-	return id, err
 }

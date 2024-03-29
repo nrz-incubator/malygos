@@ -1,9 +1,7 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -17,22 +15,10 @@ func (api *ApiImpl) CreateRegistrarCluster(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, nil)
 	}
 
-	if c.Request().Body == nil {
-		logger.Error(fmt.Errorf("create cluster request error"), "request body is nil")
-		return c.JSON(http.StatusBadRequest, Error{Error: "request body is nil"})
-	}
-
-	req, err := io.ReadAll(c.Request().Body)
-	defer c.Request().Body.Close()
-	if err != nil {
-		logger.Error(err, "failed to read request body on create cluster")
-		return c.JSON(http.StatusInternalServerError, nil)
-	}
-
 	cluster := &RegistrarCluster{}
-	if err := json.Unmarshal(req, cluster); err != nil {
-		logger.Error(err, "failed to unmarshal request body on create cluster")
-		return c.JSON(http.StatusBadRequest, Error{Error: "failed to unmarshal request body on create cluster"})
+	if err := c.Bind(cluster); err != nil {
+		logger.Error(err, "failed to bind request body on create cluster")
+		return c.JSON(http.StatusBadRequest, nil)
 	}
 
 	if cluster.Kubeconfig == nil {

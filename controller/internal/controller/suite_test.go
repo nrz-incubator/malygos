@@ -32,7 +32,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	malygosv1 "github.com/nrz-incubator/malygos/api/v1"
+	malygosv1 "github.com/nrz-incubator/malygos/controller/api/v1"
 	//+kubebuilder:scaffold:imports
 )
 

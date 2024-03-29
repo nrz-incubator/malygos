@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/nrz-incubator/malygos/test/utils"
+	"github.com/nrz-incubator/malygos/controller/test/utils"
 )
 
 const namespace = "controller-system"

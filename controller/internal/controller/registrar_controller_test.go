@@ -27,7 +27,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	malygosv1 "github.com/nrz-incubator/malygos/api/v1"
+	malygosv1 "github.com/nrz-incubator/malygos/controller/api/v1"
 )
 
 var _ = Describe("Registrar Controller", func() {

@@ -39,6 +39,15 @@ spec:
           spec:
             description: ClusterSpec defines the desired state of Cluster
             properties:
+              components:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    version:
+                      type: string
+                  type: object
+                type: array
               region:
                 type: string
               version:
@@ -47,6 +56,15 @@ spec:
           status:
             description: ClusterStatus defines the observed state of Cluster
             properties:
+              components:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    version:
+                      type: string
+                  type: object
+                type: array
               kubeconfig:
                 type: string
               phase:

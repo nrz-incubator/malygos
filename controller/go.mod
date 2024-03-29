@@ -1,4 +1,4 @@
-module github.com/nrz-incubator/malygos
+module github.com/nrz-incubator/malygos/controller
 
 go 1.21
 
