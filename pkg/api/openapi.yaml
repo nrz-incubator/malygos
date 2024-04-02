@@ -119,6 +119,40 @@ paths:
           description: Cluster deleted
         "404":
           description: Cluster not found
+  /v1/clusters/{region}/{clusterId}/subscriptions:
+    get:
+      summary: List all subscriptions to a cluster
+      operationId: listClusterSubscriptions
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      parameters:
+        - name: clusterId
+          in: path
+          required: true
+          description: Cluster ID
+          schema:
+            type: string
+        - name: region
+          in: path
+          required: true
+          description: Cluster region
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of subscriptions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscriptions:
+                    $ref: "#/components/schemas/CatalogComponentVersion"
+                required:
+                  - subscriptions
+        "404":
+          description: No subscription found
   /v1/registrars:
     get:
       summary: List all management clusters
@@ -409,6 +443,133 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /v1/catalog/components/{componentName}/versions/{componentVersion}/subscriptions:
+    get:
+      summary: List all subscriptions to a component version
+      operationId: listCatalogComponentVersionSubscriptions
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      parameters:
+        - name: componentName
+          in: path
+          required: true
+          description: Component name
+          schema:
+            type: string
+        - name: componentVersion
+          in: path
+          required: true
+          description: Component version
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of subscriptions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscriptions:
+                    $ref: "#/components/schemas/SubscribedClusters"
+                required:
+                  - subscriptions
+        "404":
+          description: No subscription found
+    post:
+      summary: Subscribe to a component version
+      operationId: subscribeCatalogComponentVersion
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      parameters:
+        - name: componentName
+          in: path
+          required: true
+          description: Component name
+          schema:
+            type: string
+        - name: componentVersion
+          in: path
+          required: true
+          description: Component version
+          schema:
+            type: string
+        - name: region
+          in: query
+          required: true
+          description: Region to subscribe to
+          schema:
+            type: string
+        - name: clusterId
+          in: query
+          required: true
+          description: Cluster ID to subscribe to
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Subscribed to component version
+        "400":
+          description: Invalid input
+        "403":
+          description: Not allowed to subscribe to component version
+        "404":
+          description: Component version not found
+        "409":
+          description: Already subscribed to component version
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Unsubscribe from a component version
+      operationId: unsubscribeCatalogComponentVersion
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      parameters:
+        - name: componentName
+          in: path
+          required: true
+          description: Component name
+          schema:
+            type: string
+        - name: componentVersion
+          in: path
+          required: true
+          description: Component version
+          schema:
+            type: string
+        - name: region
+          in: query
+          required: true
+          description: Region to unsubscribe from
+          schema:
+            type: string
+        - name: clusterId
+          in: query
+          required: true
+          description: Cluster ID to unsubscribe from
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Unsubscribed from component version
+        "400":
+          description: Invalid input
+        "403":
+          description: Not allowed to unsubscribe from component version
+        "404":
+          description: Component version not found
+        "409":
+          description: Not subscribed to component version
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -531,3 +692,17 @@ components:
             $ref: "#/components/schemas/CatalogComponent"
       required:
         - components
+    SubscribedClusters:
+      type: object
+      properties:
+        clusters:
+          type: array
+          items:
+            type: object
+            properties:
+              region:
+                type: string
+              cluster_id:
+                type: string
+      required:
+        - clusters

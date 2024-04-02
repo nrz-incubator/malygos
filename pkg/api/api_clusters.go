@@ -137,3 +137,23 @@ func (api *ApiImpl) ListClusters(c echo.Context) error {
 
 	return c.JSON(200, resp.JSON200)
 }
+
+func (api *ApiImpl) ListClusterSubscriptions(c echo.Context, region string, clusterId string) error {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "list", "cluster_subscription") {
+		return c.JSON(http.StatusForbidden, nil)
+	}
+
+	clusterManager, err := api.manager.GetClusterManager(region)
+	if err != nil {
+		api.logger.Error(err, "failed to get cluster manager")
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	subscriptions, err := clusterManager.ListSubscriptions(clusterId)
+	if err != nil {
+		api.logger.Error(err, "failed to list cluster subscriptions")
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+
+	return c.JSON(http.StatusOK, subscriptions)
+}

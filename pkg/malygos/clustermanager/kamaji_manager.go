@@ -221,3 +221,8 @@ func (m *KamajiClusterManager) Get(id string) (*api.Cluster, error) {
 		},
 	}, nil
 }
+
+func (m *KamajiClusterManager) ListSubscriptions(id string) ([]*api.CatalogComponent, error) {
+	// TODO
+	return nil, nil
+}

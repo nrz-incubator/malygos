@@ -8,4 +8,7 @@ type CatalogManager interface {
 	AddComponentVersion(componentName string, version *CatalogComponentVersion) error
 	DeleteComponentVersion(componentName string, version string) error
 	GetComponentVersion(componentName string, version string) (CatalogComponentVersion, error)
+	SubscribeComponentVersion(region string, clusterId string, componentName string, componentVersion string) error
+	ListComponentVersionSubscriptions(componentName string, componentVersion string) ([]SubscribedClusters, error)
+	UnsubscribeComponentVersion(region string, clusterId string, componentName string, componentVersion string) error
 }

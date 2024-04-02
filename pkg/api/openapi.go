@@ -86,6 +86,32 @@ type RegistrarCluster struct {
 	Region     string      `json:"region"`
 }
 
+// SubscribedClusters defines model for SubscribedClusters.
+type SubscribedClusters struct {
+	Clusters []struct {
+		ClusterId *string `json:"cluster_id,omitempty"`
+		Region    *string `json:"region,omitempty"`
+	} `json:"clusters"`
+}
+
+// UnsubscribeCatalogComponentVersionParams defines parameters for UnsubscribeCatalogComponentVersion.
+type UnsubscribeCatalogComponentVersionParams struct {
+	// Region Region to unsubscribe from
+	Region string `form:"region" json:"region"`
+
+	// ClusterId Cluster ID to unsubscribe from
+	ClusterId string `form:"clusterId" json:"clusterId"`
+}
+
+// SubscribeCatalogComponentVersionParams defines parameters for SubscribeCatalogComponentVersion.
+type SubscribeCatalogComponentVersionParams struct {
+	// Region Region to subscribe to
+	Region string `form:"region" json:"region"`
+
+	// ClusterId Cluster ID to subscribe to
+	ClusterId string `form:"clusterId" json:"clusterId"`
+}
+
 // AddCatalogComponentJSONRequestBody defines body for AddCatalogComponent for application/json ContentType.
 type AddCatalogComponentJSONRequestBody = CatalogComponent
 
@@ -196,6 +222,15 @@ type ClientInterface interface {
 	// GetCatalogComponentVersion request
 	GetCatalogComponentVersion(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// UnsubscribeCatalogComponentVersion request
+	UnsubscribeCatalogComponentVersion(ctx context.Context, componentName string, componentVersion string, params *UnsubscribeCatalogComponentVersionParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListCatalogComponentVersionSubscriptions request
+	ListCatalogComponentVersionSubscriptions(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SubscribeCatalogComponentVersion request
+	SubscribeCatalogComponentVersion(ctx context.Context, componentName string, componentVersion string, params *SubscribeCatalogComponentVersionParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListClusters request
 	ListClusters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -209,6 +244,9 @@ type ClientInterface interface {
 
 	// GetCluster request
 	GetCluster(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListClusterSubscriptions request
+	ListClusterSubscriptions(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListRegistrarClusters request
 	ListRegistrarClusters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -333,6 +371,42 @@ func (c *Client) GetCatalogComponentVersion(ctx context.Context, componentName s
 	return c.Client.Do(req)
 }
 
+func (c *Client) UnsubscribeCatalogComponentVersion(ctx context.Context, componentName string, componentVersion string, params *UnsubscribeCatalogComponentVersionParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUnsubscribeCatalogComponentVersionRequest(c.Server, componentName, componentVersion, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListCatalogComponentVersionSubscriptions(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListCatalogComponentVersionSubscriptionsRequest(c.Server, componentName, componentVersion)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SubscribeCatalogComponentVersion(ctx context.Context, componentName string, componentVersion string, params *SubscribeCatalogComponentVersionParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSubscribeCatalogComponentVersionRequest(c.Server, componentName, componentVersion, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListClusters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListClustersRequest(c.Server)
 	if err != nil {
@@ -383,6 +457,18 @@ func (c *Client) DeleteCluster(ctx context.Context, region string, clusterId str
 
 func (c *Client) GetCluster(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetClusterRequest(c.Server, region, clusterId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListClusterSubscriptions(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListClusterSubscriptionsRequest(c.Server, region, clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -717,6 +803,189 @@ func NewGetCatalogComponentVersionRequest(server string, componentName string, c
 	return req, nil
 }
 
+// NewUnsubscribeCatalogComponentVersionRequest generates requests for UnsubscribeCatalogComponentVersion
+func NewUnsubscribeCatalogComponentVersionRequest(server string, componentName string, componentVersion string, params *UnsubscribeCatalogComponentVersionParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "componentName", runtime.ParamLocationPath, componentName)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "componentVersion", runtime.ParamLocationPath, componentVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/catalog/components/%s/versions/%s/subscriptions", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "region", runtime.ParamLocationQuery, params.Region); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "clusterId", runtime.ParamLocationQuery, params.ClusterId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListCatalogComponentVersionSubscriptionsRequest generates requests for ListCatalogComponentVersionSubscriptions
+func NewListCatalogComponentVersionSubscriptionsRequest(server string, componentName string, componentVersion string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "componentName", runtime.ParamLocationPath, componentName)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "componentVersion", runtime.ParamLocationPath, componentVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/catalog/components/%s/versions/%s/subscriptions", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewSubscribeCatalogComponentVersionRequest generates requests for SubscribeCatalogComponentVersion
+func NewSubscribeCatalogComponentVersionRequest(server string, componentName string, componentVersion string, params *SubscribeCatalogComponentVersionParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "componentName", runtime.ParamLocationPath, componentName)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "componentVersion", runtime.ParamLocationPath, componentVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/catalog/components/%s/versions/%s/subscriptions", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "region", runtime.ParamLocationQuery, params.Region); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "clusterId", runtime.ParamLocationQuery, params.ClusterId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListClustersRequest generates requests for ListClusters
 func NewListClustersRequest(server string) (*http.Request, error) {
 	var err error
@@ -849,6 +1118,47 @@ func NewGetClusterRequest(server string, region string, clusterId string) (*http
 	}
 
 	operationPath := fmt.Sprintf("/v1/clusters/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListClusterSubscriptionsRequest generates requests for ListClusterSubscriptions
+func NewListClusterSubscriptionsRequest(server string, region string, clusterId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "region", runtime.ParamLocationPath, region)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "clusterId", runtime.ParamLocationPath, clusterId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/clusters/%s/%s/subscriptions", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1069,6 +1379,15 @@ type ClientWithResponsesInterface interface {
 	// GetCatalogComponentVersionWithResponse request
 	GetCatalogComponentVersionWithResponse(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*GetCatalogComponentVersionResponse, error)
 
+	// UnsubscribeCatalogComponentVersionWithResponse request
+	UnsubscribeCatalogComponentVersionWithResponse(ctx context.Context, componentName string, componentVersion string, params *UnsubscribeCatalogComponentVersionParams, reqEditors ...RequestEditorFn) (*UnsubscribeCatalogComponentVersionResponse, error)
+
+	// ListCatalogComponentVersionSubscriptionsWithResponse request
+	ListCatalogComponentVersionSubscriptionsWithResponse(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*ListCatalogComponentVersionSubscriptionsResponse, error)
+
+	// SubscribeCatalogComponentVersionWithResponse request
+	SubscribeCatalogComponentVersionWithResponse(ctx context.Context, componentName string, componentVersion string, params *SubscribeCatalogComponentVersionParams, reqEditors ...RequestEditorFn) (*SubscribeCatalogComponentVersionResponse, error)
+
 	// ListClustersWithResponse request
 	ListClustersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListClustersResponse, error)
 
@@ -1082,6 +1401,9 @@ type ClientWithResponsesInterface interface {
 
 	// GetClusterWithResponse request
 	GetClusterWithResponse(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*GetClusterResponse, error)
+
+	// ListClusterSubscriptionsWithResponse request
+	ListClusterSubscriptionsWithResponse(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*ListClusterSubscriptionsResponse, error)
 
 	// ListRegistrarClustersWithResponse request
 	ListRegistrarClustersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListRegistrarClustersResponse, error)
@@ -1256,6 +1578,74 @@ func (r GetCatalogComponentVersionResponse) StatusCode() int {
 	return 0
 }
 
+type UnsubscribeCatalogComponentVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON409      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r UnsubscribeCatalogComponentVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UnsubscribeCatalogComponentVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListCatalogComponentVersionSubscriptionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Subscriptions SubscribedClusters `json:"subscriptions"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r ListCatalogComponentVersionSubscriptionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListCatalogComponentVersionSubscriptionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type SubscribeCatalogComponentVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON409      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r SubscribeCatalogComponentVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SubscribeCatalogComponentVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListClustersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1340,6 +1730,30 @@ func (r GetClusterResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetClusterResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListClusterSubscriptionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Subscriptions CatalogComponentVersion `json:"subscriptions"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r ListClusterSubscriptionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListClusterSubscriptionsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1516,6 +1930,33 @@ func (c *ClientWithResponses) GetCatalogComponentVersionWithResponse(ctx context
 	return ParseGetCatalogComponentVersionResponse(rsp)
 }
 
+// UnsubscribeCatalogComponentVersionWithResponse request returning *UnsubscribeCatalogComponentVersionResponse
+func (c *ClientWithResponses) UnsubscribeCatalogComponentVersionWithResponse(ctx context.Context, componentName string, componentVersion string, params *UnsubscribeCatalogComponentVersionParams, reqEditors ...RequestEditorFn) (*UnsubscribeCatalogComponentVersionResponse, error) {
+	rsp, err := c.UnsubscribeCatalogComponentVersion(ctx, componentName, componentVersion, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUnsubscribeCatalogComponentVersionResponse(rsp)
+}
+
+// ListCatalogComponentVersionSubscriptionsWithResponse request returning *ListCatalogComponentVersionSubscriptionsResponse
+func (c *ClientWithResponses) ListCatalogComponentVersionSubscriptionsWithResponse(ctx context.Context, componentName string, componentVersion string, reqEditors ...RequestEditorFn) (*ListCatalogComponentVersionSubscriptionsResponse, error) {
+	rsp, err := c.ListCatalogComponentVersionSubscriptions(ctx, componentName, componentVersion, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListCatalogComponentVersionSubscriptionsResponse(rsp)
+}
+
+// SubscribeCatalogComponentVersionWithResponse request returning *SubscribeCatalogComponentVersionResponse
+func (c *ClientWithResponses) SubscribeCatalogComponentVersionWithResponse(ctx context.Context, componentName string, componentVersion string, params *SubscribeCatalogComponentVersionParams, reqEditors ...RequestEditorFn) (*SubscribeCatalogComponentVersionResponse, error) {
+	rsp, err := c.SubscribeCatalogComponentVersion(ctx, componentName, componentVersion, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSubscribeCatalogComponentVersionResponse(rsp)
+}
+
 // ListClustersWithResponse request returning *ListClustersResponse
 func (c *ClientWithResponses) ListClustersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListClustersResponse, error) {
 	rsp, err := c.ListClusters(ctx, reqEditors...)
@@ -1558,6 +1999,15 @@ func (c *ClientWithResponses) GetClusterWithResponse(ctx context.Context, region
 		return nil, err
 	}
 	return ParseGetClusterResponse(rsp)
+}
+
+// ListClusterSubscriptionsWithResponse request returning *ListClusterSubscriptionsResponse
+func (c *ClientWithResponses) ListClusterSubscriptionsWithResponse(ctx context.Context, region string, clusterId string, reqEditors ...RequestEditorFn) (*ListClusterSubscriptionsResponse, error) {
+	rsp, err := c.ListClusterSubscriptions(ctx, region, clusterId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListClusterSubscriptionsResponse(rsp)
 }
 
 // ListRegistrarClustersWithResponse request returning *ListRegistrarClustersResponse
@@ -1814,6 +2264,86 @@ func ParseGetCatalogComponentVersionResponse(rsp *http.Response) (*GetCatalogCom
 	return response, nil
 }
 
+// ParseUnsubscribeCatalogComponentVersionResponse parses an HTTP response from a UnsubscribeCatalogComponentVersionWithResponse call
+func ParseUnsubscribeCatalogComponentVersionResponse(rsp *http.Response) (*UnsubscribeCatalogComponentVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UnsubscribeCatalogComponentVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListCatalogComponentVersionSubscriptionsResponse parses an HTTP response from a ListCatalogComponentVersionSubscriptionsWithResponse call
+func ParseListCatalogComponentVersionSubscriptionsResponse(rsp *http.Response) (*ListCatalogComponentVersionSubscriptionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListCatalogComponentVersionSubscriptionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Subscriptions SubscribedClusters `json:"subscriptions"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSubscribeCatalogComponentVersionResponse parses an HTTP response from a SubscribeCatalogComponentVersionWithResponse call
+func ParseSubscribeCatalogComponentVersionResponse(rsp *http.Response) (*SubscribeCatalogComponentVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SubscribeCatalogComponentVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListClustersResponse parses an HTTP response from a ListClustersWithResponse call
 func ParseListClustersResponse(rsp *http.Response) (*ListClustersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1901,6 +2431,34 @@ func ParseGetClusterResponse(rsp *http.Response) (*GetClusterResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest Cluster
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListClusterSubscriptionsResponse parses an HTTP response from a ListClusterSubscriptionsWithResponse call
+func ParseListClusterSubscriptionsResponse(rsp *http.Response) (*ListClusterSubscriptionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListClusterSubscriptionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Subscriptions CatalogComponentVersion `json:"subscriptions"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -2038,6 +2596,15 @@ type ServerInterface interface {
 	// Get a component version in the catalog
 	// (GET /v1/catalog/components/{componentName}/versions/{componentVersion})
 	GetCatalogComponentVersion(ctx echo.Context, componentName string, componentVersion string) error
+	// Unsubscribe from a component version
+	// (DELETE /v1/catalog/components/{componentName}/versions/{componentVersion}/subscriptions)
+	UnsubscribeCatalogComponentVersion(ctx echo.Context, componentName string, componentVersion string, params UnsubscribeCatalogComponentVersionParams) error
+	// List all subscriptions to a component version
+	// (GET /v1/catalog/components/{componentName}/versions/{componentVersion}/subscriptions)
+	ListCatalogComponentVersionSubscriptions(ctx echo.Context, componentName string, componentVersion string) error
+	// Subscribe to a component version
+	// (POST /v1/catalog/components/{componentName}/versions/{componentVersion}/subscriptions)
+	SubscribeCatalogComponentVersion(ctx echo.Context, componentName string, componentVersion string, params SubscribeCatalogComponentVersionParams) error
 	// List all clusters
 	// (GET /v1/clusters)
 	ListClusters(ctx echo.Context) error
@@ -2050,6 +2617,9 @@ type ServerInterface interface {
 	// Get a cluster
 	// (GET /v1/clusters/{region}/{clusterId})
 	GetCluster(ctx echo.Context, region string, clusterId string) error
+	// List all subscriptions to a cluster
+	// (GET /v1/clusters/{region}/{clusterId}/subscriptions)
+	ListClusterSubscriptions(ctx echo.Context, region string, clusterId string) error
 	// List all management clusters
 	// (GET /v1/registrars)
 	ListRegistrarClusters(ctx echo.Context) error
@@ -2211,6 +2781,122 @@ func (w *ServerInterfaceWrapper) GetCatalogComponentVersion(ctx echo.Context) er
 	return err
 }
 
+// UnsubscribeCatalogComponentVersion converts echo context to params.
+func (w *ServerInterfaceWrapper) UnsubscribeCatalogComponentVersion(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "componentName" -------------
+	var componentName string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentName", ctx.Param("componentName"), &componentName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentName: %s", err))
+	}
+
+	// ------------- Path parameter "componentVersion" -------------
+	var componentVersion string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentVersion", ctx.Param("componentVersion"), &componentVersion, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentVersion: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	ctx.Set(BasicAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params UnsubscribeCatalogComponentVersionParams
+	// ------------- Required query parameter "region" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "region", ctx.QueryParams(), &params.Region)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter region: %s", err))
+	}
+
+	// ------------- Required query parameter "clusterId" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "clusterId", ctx.QueryParams(), &params.ClusterId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter clusterId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UnsubscribeCatalogComponentVersion(ctx, componentName, componentVersion, params)
+	return err
+}
+
+// ListCatalogComponentVersionSubscriptions converts echo context to params.
+func (w *ServerInterfaceWrapper) ListCatalogComponentVersionSubscriptions(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "componentName" -------------
+	var componentName string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentName", ctx.Param("componentName"), &componentName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentName: %s", err))
+	}
+
+	// ------------- Path parameter "componentVersion" -------------
+	var componentVersion string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentVersion", ctx.Param("componentVersion"), &componentVersion, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentVersion: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	ctx.Set(BasicAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ListCatalogComponentVersionSubscriptions(ctx, componentName, componentVersion)
+	return err
+}
+
+// SubscribeCatalogComponentVersion converts echo context to params.
+func (w *ServerInterfaceWrapper) SubscribeCatalogComponentVersion(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "componentName" -------------
+	var componentName string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentName", ctx.Param("componentName"), &componentName, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentName: %s", err))
+	}
+
+	// ------------- Path parameter "componentVersion" -------------
+	var componentVersion string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "componentVersion", ctx.Param("componentVersion"), &componentVersion, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter componentVersion: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	ctx.Set(BasicAuthScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SubscribeCatalogComponentVersionParams
+	// ------------- Required query parameter "region" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "region", ctx.QueryParams(), &params.Region)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter region: %s", err))
+	}
+
+	// ------------- Required query parameter "clusterId" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "clusterId", ctx.QueryParams(), &params.ClusterId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter clusterId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.SubscribeCatalogComponentVersion(ctx, componentName, componentVersion, params)
+	return err
+}
+
 // ListClusters converts echo context to params.
 func (w *ServerInterfaceWrapper) ListClusters(ctx echo.Context) error {
 	var err error
@@ -2290,6 +2976,34 @@ func (w *ServerInterfaceWrapper) GetCluster(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetCluster(ctx, region, clusterId)
+	return err
+}
+
+// ListClusterSubscriptions converts echo context to params.
+func (w *ServerInterfaceWrapper) ListClusterSubscriptions(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "region" -------------
+	var region string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "region", ctx.Param("region"), &region, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter region: %s", err))
+	}
+
+	// ------------- Path parameter "clusterId" -------------
+	var clusterId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "clusterId", ctx.Param("clusterId"), &clusterId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter clusterId: %s", err))
+	}
+
+	ctx.Set(BearerAuthScopes, []string{})
+
+	ctx.Set(BasicAuthScopes, []string{})
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.ListClusterSubscriptions(ctx, region, clusterId)
 	return err
 }
 
@@ -2394,10 +3108,14 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.POST(baseURL+"/v1/catalog/components/:componentName/versions", wrapper.AddCatalogComponentVersion)
 	router.DELETE(baseURL+"/v1/catalog/components/:componentName/versions/:componentVersion", wrapper.DeleteCatalogComponentVersion)
 	router.GET(baseURL+"/v1/catalog/components/:componentName/versions/:componentVersion", wrapper.GetCatalogComponentVersion)
+	router.DELETE(baseURL+"/v1/catalog/components/:componentName/versions/:componentVersion/subscriptions", wrapper.UnsubscribeCatalogComponentVersion)
+	router.GET(baseURL+"/v1/catalog/components/:componentName/versions/:componentVersion/subscriptions", wrapper.ListCatalogComponentVersionSubscriptions)
+	router.POST(baseURL+"/v1/catalog/components/:componentName/versions/:componentVersion/subscriptions", wrapper.SubscribeCatalogComponentVersion)
 	router.GET(baseURL+"/v1/clusters", wrapper.ListClusters)
 	router.POST(baseURL+"/v1/clusters", wrapper.CreateCluster)
 	router.DELETE(baseURL+"/v1/clusters/:region/:clusterId", wrapper.DeleteCluster)
 	router.GET(baseURL+"/v1/clusters/:region/:clusterId", wrapper.GetCluster)
+	router.GET(baseURL+"/v1/clusters/:region/:clusterId/subscriptions", wrapper.ListClusterSubscriptions)
 	router.GET(baseURL+"/v1/registrars", wrapper.ListRegistrarClusters)
 	router.POST(baseURL+"/v1/registrars", wrapper.CreateRegistrarCluster)
 	router.DELETE(baseURL+"/v1/registrars/:clusterRegistrarId", wrapper.DeleteRegistrarCluster)
@@ -2408,30 +3126,34 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xZ32/bNhD+VwRuj0LsbH2p39J0KIKuxbAAfUmDgBYvNjuJ1EgqnWH4fx8okvpF6odj",
-	"O87Qvckixbv77uPdZ3KLEp7lnAFTEi22SCZryHD5eI0VTvlKP+aC5yAUhXKg/QVVkJUPPwt4RAv006we",
-	"n9nlZnatazeCdjFSmxzQAmEh8AbtdjES8HdBBRC0uGvauK+m8uU3SMpvvfU8JwnIRNBcUc70T7uCVIKy",
-	"lV6BJj0DKVYg1cMTCNn3LcMZBAfyYplSuQbyIGBFOWsD5E1vIxAjueZCPYx5Xog0+N56vJfNDuplYCE/",
-	"YtT+pX2wGE5Jz5cazG6WcgEJ1qs+EKzCqI4BUqI+tsiBqRGQ8Sec9q/fz5cOxm5iF1IviiCwaSEVCB9I",
-	"SoJe/VUsIeHska7GdujHeuYQww14wSGpsCrGK4GJ4NZM3gc4S07rQf3hAE63lUtttDhLKWsGuOQ8BcxK",
-	"oqyxhHFv7BJufsiJ34TggVSBez1swEwLrfuxlVQvD3/CikolsHi9ZBnMrB+yJhckhaBqc6s9MFEssaTJ",
-	"VaHWVd8qM6nfomqJtVK5dmUJWIDwZ5evu9O1QcoeuWl2TOGkbDAmTvQ7p0n0LuXKq03oikVXf9xEikeJ",
-	"AKwg0kAJBgpklJhsyIiziECGGdFPueBPlABpzPzKMszwCjJgqvrq4qumvKIq1S58wulmxaU21tgIC3R5",
-	"Mb+Ya7d4DgznFC3QrxeXF3NNU6zWJWyzp8tZUrf2FZSxaXqUteeG6BCpVN0aLssMyZwzafD/ZT53ANkO",
-	"jPPclbDZN2kybygzUR8Y6NuYal8i/hg1FMEuRm/mb7wujz7zelb0yAtGWtxBi7ttiwh397u4xaO7+919",
-	"jGSRZVhsnG2cpg3jEWWRWkOUVB7HTUhnbXGUcxmA94oQT8CYHQFSveNkc2xcG7qrvfeUKGDn5fXyxPbb",
-	"WasGI0z0TlC8DbBO9vGYZopywI0b9oRTSiLK8kIZq29Pb7URfCoAk00E/1CpOT5IXGTRecAkowx5PPbG",
-	"W7S+IiTCEYPvje3SRb2X1rNt9fwZZ7Az2zAFo4vaRH9fvg9wPccCZ6ALWxlbHya2MVD9Vhcw5JoNavmA",
-	"upSOG2nptp57j+6BSlK7YEIjvTWn4Syvis6LkyfBTJtfQu3vCflj0hrhZrUVPOtu22Br+QDqtfNhfqby",
-	"1yDPVKId1N0+gGrlcHJn65aAWfOv5+SW96X6I3Tu7J++77pYz9x+W270wWyT+WN34wqE83Zl58azu3O1",
-	"NRsDlgXP6NyvYsvG27GsjVisoziZanB5m64e3BfnVBHOh7OrCefIIarif66+hKLZq6NMFTiBvXBUoePW",
-	"7xM89sxl+HjETToQ7M7VSsP0tIsVe8YXOLL+jgWjbHXIfUDlTuBMrv+gxn00dExj5uyZ3aEDmobRsAK9",
-	"Lk/kHF4nkn0uGy8s85pmO5vKAm3OI0kcCVCFYDJab4jQbxxyDWU3pMTiPbtNDwVueQZqTdmqscefs/Tb",
-	"QBmxEe+l3MYqiCGPk2cV3O16MduaE+zdbGtf3ZApIqui5HCjsnHdvO9pGc7kgQ3KmqmuWQKmqrFj6ydr",
-	"e1Q12XnH6g+1Aqn3Qq/M+DGzNX/JYjWiE46cfasOOptauFu0YRnQvWw7tx7wLv9ekTAIXGsNaQR/+qR0",
-	"O9/6/4x0xsOCosfZIW3hYX8akeGn+GXVRth+O32f/Nz1KxAf6rMfM41Gs+e50CGUbGmPEFZexar0R5Wq",
-	"SUIkwN/BHheAZaTdNfw5vnoIuDMmJAKfTO0qh+W0Uhxh7veJj/9ShubnLjjDKuJsqTdyI7iPd7t/AwAA",
-	"//+qRHR+jykAAA==",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -130,3 +130,51 @@ func (api *ApiImpl) DeleteCatalogComponentVersion(c echo.Context, componentName 
 
 	return c.JSON(http.StatusNotImplemented, nil)
 }
+
+func (api *ApiImpl) SubscribeCatalogComponentVersion(c echo.Context, componentName string, componentVersion string,
+	params SubscribeCatalogComponentVersionParams) error {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "subscribe", "catalog_component_version") {
+		return c.JSON(http.StatusForbidden, nil)
+	}
+
+	err := api.manager.GetCatalog().SubscribeComponentVersion(params.Region, params.ClusterId, componentName, componentVersion)
+	if err != nil {
+		if errors.IsConflict(err) {
+			return c.JSON(http.StatusConflict, nil)
+		}
+
+		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusAccepted, nil)
+}
+
+func (api *ApiImpl) ListCatalogComponentVersionSubscriptions(c echo.Context, componentName string, componentVersion string) error {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "list", "catalog_component_version_subscription") {
+		return c.JSON(http.StatusForbidden, nil)
+	}
+
+	subscriptions, err := api.manager.GetCatalog().ListComponentVersionSubscriptions(componentName, componentVersion)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusNotImplemented, subscriptions)
+}
+
+func (api *ApiImpl) UnsubscribeCatalogComponentVersion(c echo.Context, componentName string, componentVersion string,
+	params UnsubscribeCatalogComponentVersionParams) error {
+	if !api.manager.GetRBAC().IsAllowed("TODO username", "unsubscribe", "catalog_component_version") {
+		return c.JSON(http.StatusForbidden, nil)
+	}
+
+	err := api.manager.GetCatalog().UnsubscribeComponentVersion(params.Region, params.ClusterId, componentName, componentVersion)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return c.JSON(http.StatusNotFound, nil)
+		}
+		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
+	}
+
+	return c.JSON(http.StatusAccepted, nil)
+}
