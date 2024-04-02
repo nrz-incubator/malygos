@@ -510,6 +510,10 @@ components:
           type: string
         publication_date:
           type: string
+        deprecation_date:
+          type: string
+        removal_date:
+          type: string
         published_regions:
           type: array
           items:
