@@ -6,6 +6,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/nrz-incubator/malygos/pkg/api"
 	"github.com/nrz-incubator/malygos/pkg/errors"
+	"github.com/nrz-incubator/malygos/pkg/malygos/catalogmanager"
 	"github.com/nrz-incubator/malygos/pkg/malygos/clustermanager"
 	"github.com/nrz-incubator/malygos/pkg/malygos/clusterregistrar"
 	"github.com/nrz-incubator/malygos/pkg/malygos/rbac"
@@ -20,6 +21,7 @@ type MalygosManager struct {
 	registrarManager api.ClusterRegistrarManager
 	logger           logr.Logger
 	rbac             api.RBAC
+	catalogManager   api.CatalogManager
 	namespace        string
 }
 
@@ -34,12 +36,23 @@ func NewMalygosManager(logger logr.Logger, kubeconfig string, namespace string) 
 		return nil, fmt.Errorf("failed to create cluster manager: %v", err)
 	}
 
+	dynamicClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dynamic client: %v", err)
+	}
+
+	catalogManager, err := catalogmanager.NewInKubeCatalogManager(dynamicClient, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create catalog manager: %v", err)
+	}
+
 	return &MalygosManager{
 		kubeConfig:       config,
 		registrarManager: registarManager,
 		logger:           logger,
 		rbac:             rbac.NewNoop(),
 		namespace:        namespace,
+		catalogManager:   catalogManager,
 	}, nil
 }
 
@@ -78,6 +91,5 @@ func (m *MalygosManager) InstanciateClusterManager(logger logr.Logger, _ *kubern
 }
 
 func (m *MalygosManager) GetCatalog() api.CatalogManager {
-	// TODO implement a sample for this
-	return nil
+	return m.catalogManager
 }

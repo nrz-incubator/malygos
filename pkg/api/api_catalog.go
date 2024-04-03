@@ -31,7 +31,7 @@ func (api *ApiImpl) AddCatalogComponent(c echo.Context) error {
 	}
 
 	// TODO validate component
-	err := api.manager.GetCatalog().AddComponent(component)
+	err := api.manager.GetCatalog().AddComponent(&component)
 	if err != nil {
 		if errors.IsConflict(err) {
 			return c.JSON(http.StatusConflict, nil)
@@ -85,9 +85,21 @@ func (api *ApiImpl) AddCatalogComponentVersion(c echo.Context, componentName str
 		return c.JSON(http.StatusBadRequest, nil)
 	}
 
-	// TODO validate componentVersion
-	err := api.manager.GetCatalog().AddComponentVersion(componentName, &componentVersion)
+	// TODO validate componentVersion object
+
+	component, err := api.manager.GetCatalog().GetComponent(componentName)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return c.JSON(http.StatusBadRequest, errors.NewNotFoundError("component", componentName))
+		}
+		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
+	}
+
+	if component == nil {
+		return c.JSON(http.StatusBadRequest, errors.NewNotFoundError("component", componentName))
+	}
+
+	if err := api.manager.GetCatalog().AddComponentVersion(componentName, &componentVersion); err != nil {
 		if errors.IsConflict(err) {
 			return c.JSON(http.StatusConflict, nil)
 		}

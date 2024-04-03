@@ -9,16 +9,16 @@ require (
 	github.com/go-logr/zapr v1.3.0
 	github.com/labstack/echo-contrib v0.16.0
 	github.com/labstack/echo/v4 v4.11.4
-	github.com/nrz-incubator/malygos-controller v0.0.0-20240329204752-fd58fd1fe2f1
+	github.com/nrz-incubator/malygos-controller v0.0.0-20240403184350-272f40db3552
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/automaxprocs v1.5.3
 	go.uber.org/zap v1.27.0
-	golang.org/x/mod v0.14.0
+	golang.org/x/mod v0.16.0
 	k8s.io/api v0.29.3
 	k8s.io/apimachinery v0.29.3
 	k8s.io/client-go v0.29.3
-	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
+	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
 )
 
 require (
