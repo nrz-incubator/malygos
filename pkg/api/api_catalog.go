@@ -8,7 +8,6 @@ import (
 )
 
 func (api *ApiImpl) ListCatalogComponents(c echo.Context) error {
-	// rbac check
 	if !api.manager.GetRBAC().IsAllowed("TODO username", "list", "catalog_component") {
 		return c.JSON(http.StatusForbidden, nil)
 	}
@@ -18,7 +17,7 @@ func (api *ApiImpl) ListCatalogComponents(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusNotImplemented, catalog)
+	return c.JSON(http.StatusOK, catalog)
 }
 
 func (api *ApiImpl) AddCatalogComponent(c echo.Context) error {
@@ -41,7 +40,7 @@ func (api *ApiImpl) AddCatalogComponent(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusNotImplemented, component)
+	return c.JSON(http.StatusCreated, component)
 }
 
 func (api *ApiImpl) DeleteCatalogComponent(c echo.Context, componentName string) error {
@@ -57,7 +56,7 @@ func (api *ApiImpl) DeleteCatalogComponent(c echo.Context, componentName string)
 		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusNotImplemented, CatalogComponent{})
+	return c.JSON(http.StatusNoContent, CatalogComponent{})
 }
 
 func (api *ApiImpl) GetCatalogComponent(c echo.Context, componentName string) error {
@@ -73,7 +72,7 @@ func (api *ApiImpl) GetCatalogComponent(c echo.Context, componentName string) er
 		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusNotImplemented, component)
+	return c.JSON(http.StatusOK, component)
 }
 
 func (api *ApiImpl) AddCatalogComponentVersion(c echo.Context, componentName string) error {
@@ -96,7 +95,7 @@ func (api *ApiImpl) AddCatalogComponentVersion(c echo.Context, componentName str
 		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusNotImplemented, componentVersion)
+	return c.JSON(http.StatusOK, componentVersion)
 }
 
 func (api *ApiImpl) GetCatalogComponentVersion(c echo.Context, componentName string, componentVersion string) error {
@@ -112,7 +111,7 @@ func (api *ApiImpl) GetCatalogComponentVersion(c echo.Context, componentName str
 		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusNotImplemented, version)
+	return c.JSON(http.StatusOK, version)
 }
 
 func (api *ApiImpl) DeleteCatalogComponentVersion(c echo.Context, componentName string, componentVersion string) error {
@@ -128,7 +127,7 @@ func (api *ApiImpl) DeleteCatalogComponentVersion(c echo.Context, componentName 
 		return c.JSON(http.StatusInternalServerError, Error{Error: err.Error()})
 	}
 
-	return c.JSON(http.StatusNotImplemented, nil)
+	return c.JSON(http.StatusNoContent, nil)
 }
 
 func (api *ApiImpl) SubscribeCatalogComponentVersion(c echo.Context, componentName string, componentVersion string,

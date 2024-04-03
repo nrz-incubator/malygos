@@ -509,7 +509,7 @@ paths:
           schema:
             type: string
       responses:
-        "202":
+        "201":
           description: Subscribed to component version
         "400":
           description: Invalid input
